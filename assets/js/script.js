@@ -15,25 +15,29 @@ const getPokemon = async id => {
     const url = `https://pokeapi.co/api/v2/pokemon/${id}`;
     const res = await fetch(url);
     const pokemon = await res.json();
-    createPokemonCard(pokemon)
+    pokemonsArray.push(pokemon);
 }
 
-
+// createPokemonCard(pokemon);
 
 fetchPokemons();
-fetchPokemons();
+// fetchPokemons();
 
 
 function createPokemonCard(pokemon) {
-    const pokemonEl = document.createElement('div');
-    pokemonEl.classList.add('pokemon');
 
-    const pokeInnerHTML = `
-        <div class='poke__card'>
-            <div class='poke__img'>
-                <img src='https://pokeres.bastionbot.org/images/pokemon/${pokemon.id}.png'/>
-            </div >
-        </div >
+
+    const pokemonEl = document.createElement('div');
+    pokemonEl.classList.add('pokemon__card');
+
+    const pokeInnerHTML = `        
+ 
+        <div class='card__front'>
+        </div>
+        <div class='card__back'>
+            <img src='https://pokeres.bastionbot.org/images/pokemon/${pokemon.id}.png'/>
+        </div>
+   
 
     `;
 
