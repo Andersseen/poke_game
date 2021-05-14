@@ -13,6 +13,7 @@ body {
     position: fixed;
     width: 100%;
     max-height: 50px;
+    z-index: 15;
 } 
 
 .header__title{
@@ -25,7 +26,7 @@ body {
     letter-spacing: 1px;
     margin: 0;
     text-align: center;
-    color: rgba(0, 0, 0, 0.4)
+    color: rgba(0, 0, 0, 0.4);
 }
 
 /* MAIN */
@@ -57,7 +58,7 @@ body {
 	transition-property: transform, box-shadow;
 	transition-duration: .2s;
 }
-.poke__container .pokemon:hover {
+.poke__container .pokemon:active{
 	transform: translate(2px, 2px);
 	box-shadow: 0 0 5px rgba(88, 81, 81, 0.5);
 }
@@ -73,6 +74,64 @@ body {
 	margin-top: 20px;
 	max-width: 90%;
 }
+
+
+
+    /* TABLE */
+
+#table{
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    z-index: 10;
+
+    transition-property: visibility, opacity;
+	transition-duration: .2s;
+
+    background: linear-gradient(to right, #e4a26c, #c7aae4);
+}
+#table .btn{
+    font-family: 'Zen Dots';
+    font-size: 2rem;
+    text-transform: uppercase;
+
+    background-color: #e4d2d2;
+
+    margin: 0 40%;
+    padding: 1%;
+    margin-top: 20%;
+    text-align: center;
+    border: 3px solid #deebed;
+    cursor: pointer;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    border-radius: 20px;
+    box-shadow: 2px 2px 15px rgba(88, 81, 81, 0.5);
+
+	transition-property: transform, box-shadow;
+	transition-duration: .2s;
+
+    transition: transform .2s ease;
+}
+
+#table .btn:active{
+    transform: translate(2px, 2px);
+	box-shadow: 0 0 5px rgba(88, 81, 81, 0.5);
+}
+
+ /* TABLE CLOSE */
+
+ #table.close{
+    visibility: hidden;
+    opacity: 0;
+    
+}
+
+
 
 
 
