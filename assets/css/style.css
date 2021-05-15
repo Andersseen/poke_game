@@ -55,15 +55,12 @@ body {
 	margin: 0 auto;
 	max-width: 800px;
 }
-.poke__container .pokemon__card {
-    background: linear-gradient(to left, #e4d2d2, #9c9393);
 
-    position: relative;
+.pokemon__card {
+    width: 150px;
+    height: 150px;
 
-	border-radius: 20px;
-	box-shadow: 2px 2px 15px rgba(88, 81, 81, 0.5);
 	margin: 10px;
-	padding: 20px;
 
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -72,89 +69,86 @@ body {
 
     cursor: pointer;
 
-	transition-property: transform, box-shadow;
+    transition-property: transform;
 	transition-duration: .2s;
 }
 
-.card__front {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
 
-    transform: rotateY(-180deg);
-    /* -webkit-backface-visibility: hidden;
-            backface-visibility: hidden; */
-
-    background: linear-gradient(to left, #e4d2d2, #9c9393);
+.flip__card {
+    position: relative;
+    width: 100%;
+    height: 100%;
 
     border-radius: 20px;
-	box-shadow: 2px 2px 15px rgba(88, 81, 81, 0.5);
 
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    cursor: pointer;
-
-	transition-property: transform, box-shadow;
-	transition-duration: .5s;
     
-}
-.poke__container .pokemon__card:active{
-	transform: translate(2px, 2px);
-	box-shadow: 0 0 5px rgba(88, 81, 81, 0.5);
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition-property: transform, box-shadow;
+    transition: transform .5s;
 }
 
-.poke__container .pokemon__card .card__back {
-	background-color: #deebed;
+
+
+.card__front, .card__back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    padding: 10px;
+
+    border-radius: 20px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden; 
+}
+.card__front {
+    background: linear-gradient(to left, #e4d2d2, #9c9393);
+}
+
+.card__back {
+    background: linear-gradient(to left, #e4d2d2, #9c9393);
+    
+    transform: rotateY(180deg);
+}
+
+.back__img{
+    background-color: #deebed;
 	border-radius: 50%;
-	width: 120px;
-	height: 120px;
-	text-align: center;
-
-    
 }
+
+
 .poke__container .pokemon__card .card__back img {
-	margin-top: 20px;
+	margin-top: 10px;
 	max-width: 90%;
 }
 
 
+
+
+
 /* FLIP */
 
-.card__front::-moz-selection {
-    background: transparent;
-}
-.card__front::selection {
-    background: transparent;
+.poke__container .pokemon__card:hover{
+	transform: scale(1.05);
 }
 
+.poke__container .pokemon__card:active{
+	transform: translate(2px, 2px);
+}
 
-/* .card__front, .card__back{
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  text-align: center;
-} */
-/* .card__front{
-  transform: rotateX(0deg);
-  z-index: 2;
-  background-color: #e93e29;
-  color: #FFF;
-  font: 1em/1.8em Arial;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-} */
-/* .card__back{
-  transform: rotateX(180deg);
-} */
+.poke__container .pokemon__card:hover .flip__card{
+	box-shadow: 2px 6px 12px 0 rgba(0,0,0,0.2);
 
+}
+
+.poke__container .pokemon__card:active .flip__card{
+	box-shadow: 0 2px 6px 2px rgba(0,0,0,0.2);
+}
+
+
+.pokemon__card.open__card .flip__card {
+  transform: rotateY(180deg);
+}
 
 
     /* TABLE */
@@ -210,6 +204,7 @@ body {
     opacity: 0;
     
 }
+
 
 
 

@@ -2,8 +2,6 @@ const btnStart = document.querySelector('.btn');
 const table = document.querySelector('#table');
 
 
-
-
 // const pokemonsCards = document.querySelectorAll('.pokemon__card');
 
 
@@ -14,8 +12,7 @@ const onClickStartGame = () => {
         createPokemonCard(el);
     });
 
-    // const pokemonCard = listCards('.pokemon__card');
-    // console.log(pokemonCard);
+    listCardsPokemons();
 
 }
 
@@ -29,8 +26,30 @@ btnStart.addEventListener('click', onClickStartGame);
 
 
 
+const listCardsPokemons = () => {
+
+    const pokemonsCards = document.querySelectorAll('.pokemon__card');
+
+    pokemonsCards.forEach(el => {
+        el.addEventListener('click', onClickFlipCard);
+    })
+
+
+}
 
 
 
+
+
+const onClickFlipCard = () => {
+    const cardsFront = document.querySelectorAll('.pokemon__card');
+
+    cardsFront.forEach(el => {
+        el.classList.toggle('open__card');
+    })
+
+
+
+}
 
 

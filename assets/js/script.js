@@ -31,11 +31,15 @@ function createPokemonCard(pokemon) {
     pokemonEl.classList.add('pokemon__card');
 
     const pokeInnerHTML = `        
- 
-        <div class='card__front'>
-        </div>
-        <div class='card__back'>
-            <img src='https://pokeres.bastionbot.org/images/pokemon/${pokemon.id}.png'/>
+        <div class='flip__card'>
+            <div class='card__front'>
+            </div>
+            <div class='card__back'>
+                <div class='back__img'>
+                    <img src='https://pokeres.bastionbot.org/images/pokemon/${pokemon.id}.png'/>
+                </div>
+
+            </div>
         </div>
    
 
