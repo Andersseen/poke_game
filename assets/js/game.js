@@ -28,10 +28,9 @@ const clickedCardsPokemons = () => {
     const pokemonsCards = document.querySelectorAll('.pokemon__card');
 
     pokemonsCards.forEach(el => {
-        el.addEventListener('click', () => {
-            el.classList.toggle('open__card');
-        });
+        el.addEventListener('click', toFindOut)
     })
+
 
 }
 
@@ -42,7 +41,6 @@ const shuffleCards = (cards) => {
     let result;
     let totalMemoryCards = cards.concat(cards); //copy array
 
-    console.log(totalMemoryCards);
     //sort
     result = totalMemoryCards.sort(() => .5 - Math.random());
 

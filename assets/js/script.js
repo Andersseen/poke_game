@@ -32,7 +32,7 @@ function createPokemonCard(pokemon) {
 
     const pokeInnerHTML = `        
         <div class='flip__card'>
-            <div class='card__front'>
+            <div class='card__front' data-value='${pokemon.id}'>
             </div>
             <div class='card__back'>
                 <div class='back__img'>
