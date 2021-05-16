@@ -5,51 +5,52 @@ const table = document.querySelector('#table');
 // const pokemonsCards = document.querySelectorAll('.pokemon__card');
 
 
-const onClickStartGame = () => {
-    table.classList.toggle('close');
 
-    pokemonsArray.forEach(el => {
+const onClickStartGame = () => {
+    table.classList.add('close');
+
+    let randomCards = shuffleCards(pokemonsArray);
+
+    randomCards.forEach(el => {
         createPokemonCard(el);
     });
 
-    listCardsPokemons();
+    clickedCardsPokemons();
 
 }
 
-btnStart.addEventListener('click', onClickStartGame);
-
-
-// const returnCards = (selector) => {
-
-//     return document.querySelectorAll(selector);
-// }
 
 
 
-const listCardsPokemons = () => {
+
+const clickedCardsPokemons = () => {
 
     const pokemonsCards = document.querySelectorAll('.pokemon__card');
 
     pokemonsCards.forEach(el => {
-        el.addEventListener('click', onClickFlipCard);
+        el.addEventListener('click', () => {
+            el.classList.toggle('open__card');
+        });
     })
-
 
 }
 
 
 
 
+const shuffleCards = (cards) => {
+    let result;
+    let totalMemoryCards = cards.concat(cards); //copy array
 
-const onClickFlipCard = () => {
-    const cardsFront = document.querySelectorAll('.pokemon__card');
+    console.log(totalMemoryCards);
+    //sort
+    result = totalMemoryCards.sort(() => .5 - Math.random());
 
-    cardsFront.forEach(el => {
-        el.classList.toggle('open__card');
-    })
-
-
+    return result
 
 }
 
 
+
+
+btnStart.addEventListener('click', onClickStartGame);
