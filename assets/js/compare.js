@@ -5,39 +5,34 @@ const toFindOut = (e) => {
 
     findCard.classList.add("open__card");
 
+    compareCard.classList.add("compare__card");
 
 
-    let totalFindCards = document.querySelectorAll(".open__card")
 
 
-    if (totalFindCards.length > 1) {
-        totalFindCards.forEach(el => {
-            setTimeout(() => {
-                el.classList.remove('open__card');
-            }, 600);
+    let totalOpenCards = document.querySelectorAll(".open__card");
 
-        });
+    let totalCompareCards = document.querySelectorAll(".compare__card");
+
+    if (totalOpenCards.length > 1) {
+
+        compare(totalCompareCards);
+        return;
+
     }
 
-    // if (findCrds.length < 2) {
-    //     return
-    // }
 
-    // compare(findCards);
 
-    console.log(findCard);
-    console.log(compareCard);
-    console.log(totalFindCards);
+
 }
 
 
-const compare = (card) => {
+const compare = (cards) => {
 
-    console.log(card)
-    // if (compareCard[0].dataset.value === compareCard[1].dataset.value) {
-    //     success(compareCard)
-    // } else {
-    //     error(compareCard)
-    // }
+    if (cards[0].dataset.value === cards[1].dataset.value) {
+        success(cards)
+    } else {
+        error(cards)
+    }
 
 }

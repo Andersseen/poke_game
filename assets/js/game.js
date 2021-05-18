@@ -25,7 +25,7 @@ const onClickStartGame = () => {
 
 const clickedCardsPokemons = () => {
 
-    const pokemonsCards = document.querySelectorAll('.pokemon__card');
+    let pokemonsCards = document.querySelectorAll('.pokemon__card');
 
     pokemonsCards.forEach(el => {
         el.addEventListener('click', toFindOut)
