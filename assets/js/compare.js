@@ -8,21 +8,15 @@ const toFindOut = (e) => {
     compareCard.classList.add("compare__card");
 
 
-
-
     let totalOpenCards = document.querySelectorAll(".open__card");
 
     let totalCompareCards = document.querySelectorAll(".compare__card");
 
-    if (totalOpenCards.length > 1) {
 
+    if (totalOpenCards.length === 2) {
         compare(totalCompareCards);
         return;
-
     }
-
-
-
 
 }
 
@@ -33,6 +27,11 @@ const compare = (cards) => {
         success(cards)
     } else {
         error(cards)
+    }
+
+    let cardsPending = document.querySelectorAll(".pokemon__card:not(.success)");
+    if (cardsPending.length === 0) {
+        setTimeout(loopPokemons, 1000);
     }
 
 }

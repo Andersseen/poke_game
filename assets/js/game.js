@@ -1,5 +1,10 @@
-const btnStart = document.querySelector('.btn');
+const btnStart = document.querySelector('.btn__start');
+const btnRestart = document.querySelector('.btn__end');
+
 const table = document.querySelector('#table');
+const cardsContainer = document.querySelector('.poke__container');
+
+
 
 
 // const pokemonsCards = document.querySelectorAll('.pokemon__card');
@@ -7,6 +12,8 @@ const table = document.querySelector('#table');
 
 
 const onClickStartGame = () => {
+
+    cardsContainer.innerHTML = '';
     table.classList.add('close');
 
     let randomCards = shuffleCards(pokemonsArray);
@@ -49,6 +56,16 @@ const shuffleCards = (cards) => {
 }
 
 
+const loopPokemons = () => {
+
+    table.classList.remove('close');
+    btnRestart.classList.add('active');
+
+}
+
+
+
 
 
 btnStart.addEventListener('click', onClickStartGame);
+btnRestart.addEventListener('click', onClickStartGame);
