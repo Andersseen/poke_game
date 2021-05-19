@@ -4,6 +4,13 @@ const success = (cards) => {
         el.parentNode.parentNode.classList.add("success");
     })
 
+    setTimeout(() => {
+        cards.forEach((el) => {
+            el.parentNode.parentNode.classList.remove("open__card");
+            el.classList.remove("compare__card");
+        })
+    }, 800)
+
 
 }
 

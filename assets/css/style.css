@@ -69,7 +69,7 @@ body {
 
     cursor: pointer;
 
-    transition-property: transform;
+    transition-property: transform, opacity;
 	transition-duration: .2s;
 }
 
@@ -154,7 +154,97 @@ body {
         /* ANIMATION ERROR AND SUCCESS */
 /*animate
 
-}*/
+@success
+@error
+*/
+
+/* success */
+@-webkit-keyframes success{
+    from{
+        transform: scale3d(1,1,1);
+        opacity: 1;
+    }
+    25%{
+        transform: scale3d(1.1,1.1,1.1);
+        opacity: 1;
+    }
+    to{
+        transform: scale3d(1,1,1);
+        opacity: 0;
+    }
+}
+
+@keyframes success{
+    from{
+        transform: scale3d(1,1,1);
+        opacity: 1;
+    }
+    25%{
+        transform: scale3d(1.1,1.1,1.1);
+        opacity: 1;
+    }
+    to{
+        transform: scale3d(1,1,1);
+        opacity: 0;
+    }
+}
+
+/* erroe */
+@-webkit-keyframes error {
+    10%,
+    90%{
+        transform: translateX(-1px);
+    }
+    20%,
+    80%{
+        transform: translateX(2px);
+    }
+    30%,
+    50%,
+    70%{
+        transform: translateX(-4px);
+    }
+    40%,
+    60%{
+        transform: translateX(4px);
+    }
+}
+@keyframes error {
+    10%,
+    90%{
+        transform: translateX(-1px);
+    }
+    20%,
+    80%{
+        transform: translateX(2px);
+    }
+    30%,
+    50%,
+    70%{
+        transform: translateX(-4px);
+    }
+    40%,
+    60%{
+        transform: translateX(4px);
+    }
+}
+
+
+
+
+.success{
+    pointer-events: none;
+
+    -webkit-animation: success 1.3s ease-in-out forwards;
+            animation: success 1.3s ease-in-out forwards;
+}
+
+.error{
+    -webkit-animation: error 0.82s cubic-bezier(0.36,0.07,0.19,0.97) both;
+            animation: error 0.82s cubic-bezier(0.36,0.07,0.19,0.97) both;
+}
+
+
 
 
     /* TABLE */
