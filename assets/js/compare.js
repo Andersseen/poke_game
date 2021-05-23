@@ -14,6 +14,9 @@ const toFindOut = (e) => {
         compare(totalCompareCards);
         return;
     }
+    if (totalOpenCards.length > 2) {
+        return;
+    }
 
 }
 
@@ -29,7 +32,7 @@ const compare = (cards) => {
     let cardsPending = document.querySelectorAll(".pokemon__card:not(.success)");
     if (cardsPending.length === 0) {
 
-
+        document.querySelector("#sound__good-end").cloneNode().play();
 
         setTimeout(loopPokemons, 1000);
     }

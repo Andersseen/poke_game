@@ -16,8 +16,11 @@
 
 <body>
     <header class="header">
-        <h1 class="header__title">Juego</h1>
+        <h2 class="header__accountant header__text">Time: <span id="time"></span></h2>
+        <h1 class="header__title header__text">Juego</h1>
+        <h3 class="header__level header__text">Lvl: <span id="level">1</span></h3>
         <!--fin contador niveles de juego-->
+
     </header>
     <main class="main">
         <div id="pokes" class="poke__container">
@@ -32,17 +35,34 @@
         <!-- BEGINNING -->
 
         <div id="table" class="table">
-            <div class="btn btn__start">Start</div>
-            <!-- ENDING -->
-            <div class="btn btn__end">Restart?</div>
+
+
+
+
+            <!-- POPUPS -->
+            <section class="popup">
+                <div class="popup__wrapper">
+                    <h5 class="popup__text">Do you want change level?</h5>
+                    <div class="popup__change-level">
+                        <span id="level_1" class="popup__levels">1</span>
+                        <span id="level_2" class="popup__levels">2</span>
+                        <span id="level_3" class="popup__levels">3</span>
+                    </div>
+
+                </div>
+                <div class="btn btn__start">Start</div>
+                <!-- ENDING -->
+                <div class="btn btn__end">Restart?</div>
+            </section>
         </div>
 
 
 
-
-
-
     </main>
+
+
+
+
 
     <audio src="./assets/sounds/success.wav" class="sound" id="sound__success" preload="auto"></audio>
     <audio src="./assets/sounds/card.wav" class="sound" id="sound__card" preload="auto"></audio>
@@ -54,10 +74,12 @@
 
     <!-- SCRIPTS -->
     <script src="./assets/js/cards.js"></script>
+    <script src="./assets/js/levels.js"></script>
     <script src="./assets/js/start_game.js"></script>
     <script src="./assets/js/compare.js"></script>
 
     <script src="./assets/js/success_error.js"></script>
+
 </body>
 
 </html>

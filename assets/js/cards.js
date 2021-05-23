@@ -1,6 +1,6 @@
 const pokeContainer = document.querySelector('#pokes');
 
-const pokemonsNumbers = 18;
+const pokemonsNumbers = 90;
 
 const pokemonsArray = [];
 
