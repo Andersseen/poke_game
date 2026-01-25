@@ -1,0 +1,201 @@
+@import "tailwindcss";
+@layer base {
+  :root {
+    /* Semantic Palette - Light Mode */
+    --background: #e0e5ec;
+    --foreground: #4d5561;
+
+    --primary: #6d5dfc;
+    --primary-foreground: #ffffff;
+
+    --secondary: #e0e5ec;
+    --secondary-foreground: #4d5561;
+
+    /* Shadows - Softened for cleaner look */
+    --shadow-light: #ffffff;
+    --shadow-dark: #a3b1c6;
+
+    /* Status */
+    --success: #6d5dfc;
+    --error: #ff6b6b;
+  }
+
+  /* Dark Mode Class */
+  .dark {
+    --background: #212529;
+    --foreground: #e0e5ec;
+
+    --primary: #8b7ffc;
+    --primary-foreground: #1a1d21;
+
+    --secondary: #212529;
+    --secondary-foreground: #e0e5ec;
+
+    /* Dark Mode Shadows */
+    --shadow-light: #2c3136;
+    --shadow-dark: #16181b;
+
+    --success: #8b7ffc;
+    --error: #ff8787;
+  }
+
+  html,
+  body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    font-family: "Zen Dots", cursive;
+    background-color: var(--background);
+    color: var(--foreground);
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+}
+
+@layer utilities {
+  /* Refined Neumorphism */
+  .neu-flat {
+    background: var(--background);
+    box-shadow:
+      6px 6px 12px var(--shadow-dark),
+      -6px -6px 12px var(--shadow-light);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dark .neu-flat {
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow:
+      5px 5px 10px var(--shadow-dark),
+      -5px -5px 10px var(--shadow-light);
+  }
+
+  .neu-pressed {
+    background: var(--background);
+    box-shadow:
+      inset 4px 4px 8px var(--shadow-dark),
+      inset -4px -4px 8px var(--shadow-light);
+  }
+
+  .neu-icon-btn {
+    border-radius: 50%; /* Fully Rounded */
+    background: var(--background);
+    /* Softer, smaller shadow for buttons */
+    box-shadow:
+      4px 4px 8px var(--shadow-dark),
+      -4px -4px 8px var(--shadow-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+    color: var(--foreground);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden; /* For ripple or clean edges */
+  }
+
+  .neu-icon-btn svg {
+    transition: transform 0.2s ease;
+  }
+
+  .neu-icon-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      5px 5px 10px var(--shadow-dark),
+      -5px -5px 10px var(--shadow-light);
+  }
+
+  .neu-icon-btn:active {
+    box-shadow:
+      inset 3px 3px 6px var(--shadow-dark),
+      inset -3px -3px 6px var(--shadow-light);
+    transform: translateY(0) scale(0.98);
+  }
+
+  .neu-panel {
+    border-radius: 20px;
+    background: var(--background);
+    box-shadow:
+      9px 9px 18px var(--shadow-dark),
+      -9px -9px 18px var(--shadow-light);
+  }
+
+  /* 3D and Animation Utilities */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  .animate-shake {
+    animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  .animate-ping-once {
+    animation: ping 0.5s cubic-bezier(0, 0, 0.2, 1) 1;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  .text-neu {
+    text-shadow:
+      2px 2px 4px var(--shadow-dark),
+      -2px -2px 4px var(--shadow-light);
+  }
+
+  .dark .text-neu {
+    text-shadow: 3px 3px 6px var(--shadow-dark);
+  }
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
