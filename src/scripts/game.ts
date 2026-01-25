@@ -121,7 +121,19 @@ class Game {
       "opacity-0",
       "md:opacity-100",
     );
-    this.backBtn.classList.remove("opacity-0");
+
+    // Show back button
+    this.backBtn.classList.remove(
+      "opacity-50",
+      "pointer-events-none",
+      "scale-90",
+    );
+    this.backBtn.classList.add(
+      "opacity-100",
+      "pointer-events-auto",
+      "scale-100",
+    );
+
     this.pokeContainer.innerHTML = "";
 
     this.playSound("start");
@@ -141,7 +153,14 @@ class Game {
   private stopGame() {
     this.menuContainer.classList.remove("opacity-0", "pointer-events-none");
     this.gameTitle.classList.remove("scale-50", "-translate-y-24", "opacity-0");
-    this.backBtn.classList.add("opacity-0");
+
+    // Hide back button (return to dim/inactive state)
+    this.backBtn.classList.add("opacity-50", "pointer-events-none", "scale-90");
+    this.backBtn.classList.remove(
+      "opacity-100",
+      "pointer-events-auto",
+      "scale-100",
+    );
 
     this.pokeContainer.innerHTML = "";
     this.openCards = [];
@@ -179,7 +198,7 @@ class Game {
     const inner = document.createElement("div");
     inner.className = `flip-card-inner relative w-full h-full duration-500 transform-style-3d rounded-2xl`;
 
-    // Front: Use CSS variables via classes
+    // Front
     const front = document.createElement("div");
     front.className = `card-front absolute w-full h-full neu-flat rounded-2xl backface-hidden flex items-center justify-center text-gray-400`;
     front.innerHTML = `
@@ -187,7 +206,6 @@ class Game {
     `;
 
     const back = document.createElement("div");
-    // Important: border-2 border-transparent initial to prevent layout shift when adding sticky border
     back.className = `card-back absolute w-full h-full neu-pressed rounded-2xl backface-hidden rotate-y-180 flex items-center justify-center overflow-hidden border-2 border-transparent transition-colors duration-300`;
 
     const imgWrapper = document.createElement("div");
@@ -235,8 +253,7 @@ class Game {
     inner.style.transform = "rotateY(180deg)";
 
     const back = card.querySelector(".card-back") as HTMLElement;
-    back.style.borderColor = "var(--primary)"; // Use variable opacity handled by color definition if needed, or rgba
-    back.style.borderColor = "rgba(109, 93, 252, 0.5)"; // Fallback/Specific look
+    back.style.borderColor = "rgba(109, 93, 252, 0.5)";
   }
 
   private closeCard(card: HTMLElement) {
@@ -262,7 +279,7 @@ class Game {
   }
 
   private handleMatch(card1: HTMLElement, card2: HTMLElement) {
-    this.playSound("success"); // Replaces simple play with clone logic
+    this.playSound("success");
 
     card1.classList.add("matched");
     card2.classList.add("matched");
@@ -321,16 +338,9 @@ class Game {
   private playSound(name: keyof typeof this.sounds) {
     const sound = this.sounds[name];
     if (sound) {
-      // Clone the node to allow overlapping sounds (e.g. rapid clicks or rapid matches)
-      // AND to prevent being cut off if played again immediately.
       const clone = sound.cloneNode() as HTMLAudioElement;
-      clone.volume = 0.5; // Optional: normalize volume
-
-      // Browsers require user interaction before playing audio.
-      // We assume user interaction has happened (click) by this point.
+      clone.volume = 0.5;
       clone.play().catch((e) => console.log("Audio play failed", e));
-
-      // Clean up clone after it finishes
       clone.addEventListener("ended", () => {
         clone.remove();
       });

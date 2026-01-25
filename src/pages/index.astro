@@ -7,43 +7,45 @@ import '../styles/global.css';
     <!-- Header -->
     <header class="fixed top-0 w-full z-20 flex justify-between items-center px-4 md:px-8 py-4 bg-transparent pointer-events-none">
         
-        <!-- Left: Back Button & Theme Toggle -->
-        <div class="flex gap-4 pointer-events-auto">
-             <button id="back-btn" class="neu-icon-btn w-12 h-12 md:w-14 md:h-14 opacity-0 transition-opacity duration-300" aria-label="Back to Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Left: Control Pill (Grouped Back & Theme) -->
+        <div class="neu-panel px-3 py-2 flex items-center gap-3 pointer-events-auto rounded-full shadow-sm">
+             <button id="back-btn" class="neu-icon-btn w-10 h-10 md:w-12 md:h-12 opacity-50 pointer-events-none transition-all duration-300 transform scale-90" aria-label="Back to Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             </button>
             
-            <button id="theme-btn" class="neu-icon-btn w-12 h-12 md:w-14 md:h-14" aria-label="Toggle Theme">
+            <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 opacity-50"></div>
+            
+            <button id="theme-btn" class="neu-icon-btn w-10 h-10 md:w-12 md:h-12" aria-label="Toggle Theme">
                 <!-- Sun Icon (for Dark Mode) -->
-                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
                 <!-- Moon Icon (for Light Mode) -->
-                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
             </button>
         </div>
 
         <!-- Stats (Right Side) -->
-        <div class="neu-panel px-6 py-2 flex gap-6 items-center pointer-events-auto">
+        <div class="neu-panel px-6 py-2 flex gap-6 items-center pointer-events-auto rounded-xl">
              <div class="flex flex-col items-center">
-                <span class="text-xs font-light opacity-60 uppercase tracking-widest">Lvl</span>
-                <span id="level" class="text-lg font-bold">1</span>
+                <span class="text-[0.6rem] md:text-xs font-light opacity-60 uppercase tracking-widest">Lvl</span>
+                <span id="level" class="text-base md:text-lg font-bold">1</span>
             </div>
             <div class="w-px h-8 bg-current opacity-20"></div>
-            <div class="flex flex-col items-center w-24">
-                <span class="text-xs font-light opacity-60 uppercase tracking-widest">Time</span>
-                <span id="time" class="text-sm font-bold font-mono">--:--</span>
+            <div class="flex flex-col items-center min-w-[3rem] md:min-w-[4rem]">
+                <span class="text-[0.6rem] md:text-xs font-light opacity-60 uppercase tracking-widest">Time</span>
+                <span id="time" class="text-xs md:text-sm font-bold font-mono">--:--</span>
             </div>
         </div>
     </header>
 
     <main class="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden p-4">
         <!-- Title (Menu Only) -->
-        <h1 id="game-title" class="text-5xl md:text-7xl font-bold mb-8 neu-text transition-all duration-500 select-none text-neu tracking-wider opacity-80">
+        <h1 id="game-title" class="text-5xl md:text-7xl font-bold mb-8 neu-text transition-all duration-500 select-none text-neu tracking-wider opacity-80 mt-16 md:mt-0">
             JUEGO
         </h1>
 

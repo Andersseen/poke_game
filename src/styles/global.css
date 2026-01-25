@@ -1,7 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@import "tailwindcss";
 @layer base {
   :root {
     /* Semantic Palette - Light Mode */
@@ -11,10 +8,10 @@
     --primary: #6d5dfc;
     --primary-foreground: #ffffff;
 
-    --secondary: #e0e5ec; /* Often same as bg in neumorphism */
+    --secondary: #e0e5ec;
     --secondary-foreground: #4d5561;
 
-    /* Shadows */
+    /* Shadows - Softened for cleaner look */
     --shadow-light: #ffffff;
     --shadow-dark: #a3b1c6;
 
@@ -34,9 +31,9 @@
     --secondary: #212529;
     --secondary-foreground: #e0e5ec;
 
-    /* Dark Mode Shadows (Light source is different or "glowing" logic) */
-    --shadow-light: #2c3136; /* Lighter highlight */
-    --shadow-dark: #16181b; /* Darker shadow */
+    /* Dark Mode Shadows */
+    --shadow-light: #2c3136;
+    --shadow-dark: #16181b;
 
     --success: #8b7ffc;
     --error: #ff8787;
@@ -57,58 +54,70 @@
 }
 
 @layer utilities {
+  /* Refined Neumorphism */
   .neu-flat {
     background: var(--background);
     box-shadow:
-      9px 9px 16px var(--shadow-dark),
-      -9px -9px 16px var(--shadow-light);
-    border: 1px solid transparent;
+      6px 6px 12px var(--shadow-dark),
+      -6px -6px 12px var(--shadow-light);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .dark .neu-flat {
     border-color: rgba(255, 255, 255, 0.05);
+    box-shadow:
+      5px 5px 10px var(--shadow-dark),
+      -5px -5px 10px var(--shadow-light);
   }
 
   .neu-pressed {
     background: var(--background);
-    box-shadow:
-      inset 6px 6px 10px var(--shadow-dark),
-      inset -6px -6px 10px var(--shadow-light);
-  }
-
-  .dark .neu-pressed {
-    /* In dark mode, inset shadows need careful tuning */
     box-shadow:
       inset 4px 4px 8px var(--shadow-dark),
       inset -4px -4px 8px var(--shadow-light);
   }
 
   .neu-icon-btn {
-    border-radius: 50%;
+    border-radius: 50%; /* Fully Rounded */
     background: var(--background);
+    /* Softer, smaller shadow for buttons */
     box-shadow:
-      5px 5px 10px var(--shadow-dark),
-      -5px -5px 10px var(--shadow-light);
+      4px 4px 8px var(--shadow-dark),
+      -4px -4px 8px var(--shadow-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease-in-out;
     color: var(--foreground);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden; /* For ripple or clean edges */
+  }
+
+  .neu-icon-btn svg {
+    transition: transform 0.2s ease;
+  }
+
+  .neu-icon-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      5px 5px 10px var(--shadow-dark),
+      -5px -5px 10px var(--shadow-light);
   }
 
   .neu-icon-btn:active {
     box-shadow:
-      inset 4px 4px 8px var(--shadow-dark),
-      inset -4px -4px 8px var(--shadow-light);
-    transform: scale(0.98);
+      inset 3px 3px 6px var(--shadow-dark),
+      inset -3px -3px 6px var(--shadow-light);
+    transform: translateY(0) scale(0.98);
   }
 
   .neu-panel {
     border-radius: 20px;
     background: var(--background);
     box-shadow:
-      12px 12px 24px var(--shadow-dark),
-      -12px -12px 24px var(--shadow-light);
+      9px 9px 18px var(--shadow-dark),
+      -9px -9px 18px var(--shadow-light);
   }
 
   /* 3D and Animation Utilities */
@@ -147,7 +156,6 @@
       -2px -2px 4px var(--shadow-light);
   }
 
-  /* Text Shadow Adjustment for Dark Mode (Less intense) */
   .dark .text-neu {
     text-shadow: 3px 3px 6px var(--shadow-dark);
   }
