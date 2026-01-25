@@ -62,7 +62,6 @@ class Game {
   private updateTime() {
     const update = () => {
       const now = new Date();
-      // Format MM:SS or HH:MM
       const hours = now.getHours().toString().padStart(2, "0");
       const minutes = now.getMinutes().toString().padStart(2, "0");
       this.timeDisplay.innerText = `${hours}:${minutes}`;
@@ -107,7 +106,6 @@ class Game {
     this.levelBtns.forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const el = e.target as HTMLElement;
-        // Level selection UI handled by inline script, just update state
         const level = parseInt(el.getAttribute("data-level") || "1");
         this.currentLevel = level;
         this.levelDisplay.innerText = level.toString();
@@ -117,15 +115,12 @@ class Game {
 
   private startGame() {
     this.menuContainer.classList.add("opacity-0", "pointer-events-none");
-
-    // Animate Title to shrink or move up
     this.gameTitle.classList.add(
       "scale-50",
       "-translate-y-24",
       "opacity-0",
       "md:opacity-100",
-    ); // Hide on mobile, keep small on desktop? No, let's just fade it out on mobile
-
+    );
     this.backBtn.classList.remove("opacity-0");
     this.pokeContainer.innerHTML = "";
 
@@ -133,7 +128,6 @@ class Game {
 
     const deck = this.prepareDeck();
 
-    // Staggered entry
     deck.forEach((pokemon, index) => {
       setTimeout(() => {
         this.createCard(pokemon);
@@ -145,7 +139,6 @@ class Game {
   }
 
   private stopGame() {
-    // Return to menu
     this.menuContainer.classList.remove("opacity-0", "pointer-events-none");
     this.gameTitle.classList.remove("scale-50", "-translate-y-24", "opacity-0");
     this.backBtn.classList.add("opacity-0");
@@ -179,7 +172,6 @@ class Game {
 
   private createCard(pokemon: Pokemon) {
     const card = document.createElement("div");
-    // Neumorphic Card Styling
     card.className = `pokemon-card relative w-[100px] h-[100px] md:w-[140px] md:h-[140px] m-4 cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95 select-none perspective-1000 opacity-0 animate-fade-in-up`;
     card.style.animationFillMode = "forwards";
     card.dataset.id = pokemon.id.toString();
@@ -187,16 +179,16 @@ class Game {
     const inner = document.createElement("div");
     inner.className = `flip-card-inner relative w-full h-full duration-500 transform-style-3d rounded-2xl`;
 
-    // Front: Neumorphic Flat/Convex
+    // Front: Use CSS variables via classes
     const front = document.createElement("div");
     front.className = `card-front absolute w-full h-full neu-flat rounded-2xl backface-hidden flex items-center justify-center text-gray-400`;
     front.innerHTML = `
         <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     `;
 
-    // Back: Neumorphic Pressed/Inset
     const back = document.createElement("div");
-    back.className = `card-back absolute w-full h-full neu-pressed rounded-2xl backface-hidden rotate-y-180 flex items-center justify-center overflow-hidden border-2 border-transparent`;
+    // Important: border-2 border-transparent initial to prevent layout shift when adding sticky border
+    back.className = `card-back absolute w-full h-full neu-pressed rounded-2xl backface-hidden rotate-y-180 flex items-center justify-center overflow-hidden border-2 border-transparent transition-colors duration-300`;
 
     const imgWrapper = document.createElement("div");
     imgWrapper.className = `w-[80%] h-[80%] flex items-center justify-center`;
@@ -216,10 +208,9 @@ class Game {
     card.addEventListener("click", () => this.handleCardClick(card));
     this.pokeContainer.appendChild(card);
 
-    // Trigger entry animation
     requestAnimationFrame(() => {
       card.classList.remove("opacity-0");
-      card.style.animation = "none"; // reset after fade in
+      card.style.animation = "none";
       card.style.opacity = "1";
     });
   }
@@ -243,9 +234,9 @@ class Game {
     const inner = card.querySelector(".flip-card-inner") as HTMLElement;
     inner.style.transform = "rotateY(180deg)";
 
-    // Add glowing border on open
-    const back = card.querySelector(".card-back");
-    back?.classList.add("border-[#6d5dfc/50]");
+    const back = card.querySelector(".card-back") as HTMLElement;
+    back.style.borderColor = "var(--primary)"; // Use variable opacity handled by color definition if needed, or rgba
+    back.style.borderColor = "rgba(109, 93, 252, 0.5)"; // Fallback/Specific look
   }
 
   private closeCard(card: HTMLElement) {
@@ -253,8 +244,8 @@ class Game {
     const inner = card.querySelector(".flip-card-inner") as HTMLElement;
     inner.style.transform = "rotateY(0deg)";
 
-    const back = card.querySelector(".card-back");
-    back?.classList.remove("border-[#6d5dfc/50]");
+    const back = card.querySelector(".card-back") as HTMLElement;
+    back.style.borderColor = "transparent";
   }
 
   private checkMatch() {
@@ -271,18 +262,16 @@ class Game {
   }
 
   private handleMatch(card1: HTMLElement, card2: HTMLElement) {
-    this.sounds.success.currentTime = 0;
-    this.sounds.success.play();
+    this.playSound("success"); // Replaces simple play with clone logic
 
     card1.classList.add("matched");
     card2.classList.add("matched");
 
-    // Success emphasis
     const back1 = card1.querySelector(".card-back") as HTMLElement;
     const back2 = card2.querySelector(".card-back") as HTMLElement;
 
-    back1.style.borderColor = "#6d5dfc";
-    back2.style.borderColor = "#6d5dfc";
+    back1.style.borderColor = "var(--success)";
+    back2.style.borderColor = "var(--success)";
 
     card1.classList.add("animate-bounce");
     card2.classList.add("animate-bounce");
@@ -297,17 +286,15 @@ class Game {
   }
 
   private handleMismatch(card1: HTMLElement, card2: HTMLElement) {
-    this.sounds.error.currentTime = 0;
-    this.sounds.error.play();
+    this.playSound("error");
 
     card1.classList.add("animate-shake");
     card2.classList.add("animate-shake");
 
-    // Red error glow
     const back1 = card1.querySelector(".card-back") as HTMLElement;
     const back2 = card2.querySelector(".card-back") as HTMLElement;
-    back1.style.borderColor = "#ff6b6b";
-    back2.style.borderColor = "#ff6b6b";
+    back1.style.borderColor = "var(--error)";
+    back2.style.borderColor = "var(--error)";
 
     setTimeout(() => {
       this.closeCard(card1);
@@ -316,7 +303,6 @@ class Game {
       card1.classList.remove("animate-shake");
       card2.classList.remove("animate-shake");
 
-      // Reset colors
       back1.style.borderColor = "transparent";
       back2.style.borderColor = "transparent";
 
@@ -335,13 +321,23 @@ class Game {
   private playSound(name: keyof typeof this.sounds) {
     const sound = this.sounds[name];
     if (sound) {
-      sound.currentTime = 0;
-      sound.play().catch((e) => console.log("Audio play failed", e));
+      // Clone the node to allow overlapping sounds (e.g. rapid clicks or rapid matches)
+      // AND to prevent being cut off if played again immediately.
+      const clone = sound.cloneNode() as HTMLAudioElement;
+      clone.volume = 0.5; // Optional: normalize volume
+
+      // Browsers require user interaction before playing audio.
+      // We assume user interaction has happened (click) by this point.
+      clone.play().catch((e) => console.log("Audio play failed", e));
+
+      // Clean up clone after it finishes
+      clone.addEventListener("ended", () => {
+        clone.remove();
+      });
     }
   }
 }
 
-// Start Game
 window.addEventListener("DOMContentLoaded", () => {
   new Game();
 });
