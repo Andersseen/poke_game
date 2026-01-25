@@ -3,17 +3,70 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-color: #e0e5ec;
+    --text-main: #4d5561;
+    --text-light: #8b96a8;
+    --shadow-light: #ffffff;
+    --shadow-dark: #a3b1c6;
+    --accent: #6d5dfc;
+  }
+
   html,
   body {
     margin: 0;
     width: 100%;
     height: 100%;
     font-family: "Zen Dots", cursive;
-    background-color: #f3f4f6;
+    background-color: var(--bg-color);
+    color: var(--text-main);
   }
 }
 
 @layer utilities {
+  .neu-flat {
+    background: var(--bg-color);
+    box-shadow:
+      9px 9px 16px var(--shadow-dark),
+      -9px -9px 16px var(--shadow-light);
+  }
+
+  .neu-pressed {
+    background: var(--bg-color);
+    box-shadow:
+      inset 6px 6px 10px var(--shadow-dark),
+      inset -6px -6px 10px var(--shadow-light);
+  }
+
+  .neu-icon-btn {
+    border-radius: 50%;
+    background: var(--bg-color);
+    box-shadow:
+      5px 5px 10px var(--shadow-dark),
+      -5px -5px 10px var(--shadow-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: var(--text-main);
+  }
+
+  .neu-icon-btn:active {
+    box-shadow:
+      inset 4px 4px 8px var(--shadow-dark),
+      inset -4px -4px 8px var(--shadow-light);
+    transform: scale(0.98);
+  }
+
+  .neu-panel {
+    border-radius: 20px;
+    background: var(--bg-color);
+    box-shadow:
+      12px 12px 24px var(--shadow-dark),
+      -12px -12px 24px var(--shadow-light);
+  }
+
+  /* 3D and Animation Utilities */
   .perspective-1000 {
     perspective: 1000px;
   }
@@ -31,13 +84,22 @@
     transform: rotateY(180deg);
   }
 
-  /* Animations using standard CSS in utilities layer */
   .animate-shake {
     animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   }
 
   .animate-ping-once {
     animation: ping 0.5s cubic-bezier(0, 0, 0.2, 1) 1;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  .text-neu {
+    text-shadow:
+      2px 2px 4px var(--shadow-dark),
+      -2px -2px 4px var(--shadow-light);
   }
 }
 
@@ -66,5 +128,16 @@
   100% {
     transform: scale(1.5);
     opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }

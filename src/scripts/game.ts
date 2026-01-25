@@ -8,9 +8,14 @@ class Game {
   private pokeContainer: HTMLElement;
   private timeDisplay: HTMLElement;
   private levelDisplay: HTMLElement;
-  private popupTable: HTMLElement;
-  private popupStartBtn: HTMLElement;
-  private popupRestartBtn: HTMLElement;
+
+  private menuContainer: HTMLElement;
+  private startBtn: HTMLElement;
+  private backBtn: HTMLElement;
+
+  private resultModal: HTMLElement;
+  private restartBtn: HTMLElement;
+
   private levelBtns: NodeListOf<HTMLElement>;
 
   private pokemonsArray: Pokemon[] = [];
@@ -19,6 +24,7 @@ class Game {
   private currentLevel: number = 1;
   private totalPairs: number = 0;
   private matchedPairs: number = 0;
+  private gameTitle: HTMLElement;
 
   private sounds = {
     success: document.getElementById("sound__success") as HTMLAudioElement,
@@ -33,12 +39,16 @@ class Game {
     this.pokeContainer = document.querySelector("#pokes") as HTMLElement;
     this.timeDisplay = document.querySelector("#time") as HTMLElement;
     this.levelDisplay = document.querySelector("#level") as HTMLElement;
-    this.popupTable = document.querySelector("#table") as HTMLElement;
-    this.popupStartBtn = document.querySelector("#start-btn") as HTMLElement;
-    this.popupRestartBtn = document.querySelector(
-      "#restart-btn",
-    ) as HTMLElement;
+
+    this.menuContainer = document.querySelector("#menu") as HTMLElement;
+    this.startBtn = document.querySelector("#start-btn") as HTMLElement;
+    this.backBtn = document.querySelector("#back-btn") as HTMLElement;
+
+    this.resultModal = document.querySelector("#result-modal") as HTMLElement;
+    this.restartBtn = document.querySelector("#restart-btn") as HTMLElement;
+
     this.levelBtns = document.querySelectorAll(".level-btn");
+    this.gameTitle = document.querySelector("#game-title") as HTMLElement;
 
     this.init();
   }
@@ -50,17 +60,19 @@ class Game {
   }
 
   private updateTime() {
-    const now = new Date();
-    this.timeDisplay.innerText = now.toLocaleTimeString();
-    setInterval(() => {
-      this.timeDisplay.innerText = new Date().toLocaleTimeString();
-    }, 1000);
+    const update = () => {
+      const now = new Date();
+      // Format MM:SS or HH:MM
+      const hours = now.getHours().toString().padStart(2, "0");
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      this.timeDisplay.innerText = `${hours}:${minutes}`;
+    };
+    update();
+    setInterval(update, 1000);
   }
 
   private async fetchPokemons() {
-    // Fetch some pokemons to build the deck
-    // Using a range to get a variety
-    const ids = Array.from({ length: 30 }, (_, i) => i * 3 + 1); // 1, 4, 7... original logic
+    const ids = Array.from({ length: 30 }, (_, i) => i * 3 + 1);
 
     const promises = ids.map(async (id) => {
       try {
@@ -81,93 +93,118 @@ class Game {
 
     const results = await Promise.all(promises);
     this.pokemonsArray = results.filter((p) => p !== null) as Pokemon[];
-    console.log("Pokemons loaded:", this.pokemonsArray.length);
   }
 
   private addEventListeners() {
-    this.popupStartBtn.addEventListener("click", () => this.startGame());
-    this.popupRestartBtn.addEventListener("click", () => this.startGame());
+    this.startBtn.addEventListener("click", () => this.startGame());
+    this.restartBtn.addEventListener("click", () => {
+      this.hideResultModal();
+      this.showMenu();
+    });
+
+    this.backBtn.addEventListener("click", () => this.stopGame());
 
     this.levelBtns.forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const el = e.target as HTMLElement;
-        const level = parseInt(el.innerText);
+        // Level selection UI handled by inline script, just update state
+        const level = parseInt(el.getAttribute("data-level") || "1");
         this.currentLevel = level;
         this.levelDisplay.innerText = level.toString();
-        this.startGame();
       });
     });
   }
 
   private startGame() {
+    this.menuContainer.classList.add("opacity-0", "pointer-events-none");
+
+    // Animate Title to shrink or move up
+    this.gameTitle.classList.add(
+      "scale-50",
+      "-translate-y-24",
+      "opacity-0",
+      "md:opacity-100",
+    ); // Hide on mobile, keep small on desktop? No, let's just fade it out on mobile
+
+    this.backBtn.classList.remove("opacity-0");
     this.pokeContainer.innerHTML = "";
-    this.popupTable.classList.add("opacity-0", "pointer-events-none"); // Hide popup
-    this.popupRestartBtn.classList.remove("hidden"); // Show restart for next time
-    this.popupStartBtn.classList.add("hidden");
 
     this.playSound("start");
 
-    // Prepare deck based on level
     const deck = this.prepareDeck();
 
-    deck.forEach((pokemon) => {
-      this.createCard(pokemon);
+    // Staggered entry
+    deck.forEach((pokemon, index) => {
+      setTimeout(() => {
+        this.createCard(pokemon);
+      }, index * 100);
     });
 
     this.matchedPairs = 0;
     this.totalPairs = deck.length / 2;
   }
 
-  private prepareDeck(): Pokemon[] {
-    // Original logic:
-    // Lvl 1: 2 pairs from 2 random pokemon
-    // Lvl 2: 4 pairs from 4 random pokemon
-    // Lvl 3: 6 pairs from 6 random pokemon
+  private stopGame() {
+    // Return to menu
+    this.menuContainer.classList.remove("opacity-0", "pointer-events-none");
+    this.gameTitle.classList.remove("scale-50", "-translate-y-24", "opacity-0");
+    this.backBtn.classList.add("opacity-0");
 
-    let count = 2; // Default level 1
+    this.pokeContainer.innerHTML = "";
+    this.openCards = [];
+  }
+
+  private showResultModal() {
+    this.resultModal.classList.remove("opacity-0", "pointer-events-none");
+  }
+
+  private hideResultModal() {
+    this.resultModal.classList.add("opacity-0", "pointer-events-none");
+  }
+
+  private showMenu() {
+    this.stopGame();
+  }
+
+  private prepareDeck(): Pokemon[] {
+    let count = 2;
     if (this.currentLevel === 2) count = 4;
     if (this.currentLevel === 3) count = 6;
 
-    // Shuffle main array
     const shuffled = [...this.pokemonsArray].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, count);
-
-    // Duplicate to form pairs
     const pairs = [...selected, ...selected];
-
-    // Shuffle pairs
     return pairs.sort(() => 0.5 - Math.random());
   }
 
   private createCard(pokemon: Pokemon) {
     const card = document.createElement("div");
-    // Using Tailwind classes for layout and 3D effect
-    // We need 'group' on container to control hover effect if we wanted it solely CSS,
-    // but here we use classes for state.
-    card.className = `pokemon-card relative w-[100px] h-[100px] md:w-[150px] md:h-[150px] m-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95 select-none perspective-1000`;
+    // Neumorphic Card Styling
+    card.className = `pokemon-card relative w-[100px] h-[100px] md:w-[140px] md:h-[140px] m-4 cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95 select-none perspective-1000 opacity-0 animate-fade-in-up`;
+    card.style.animationFillMode = "forwards";
     card.dataset.id = pokemon.id.toString();
 
-    // The inner container that flips
     const inner = document.createElement("div");
-    inner.className = `flip-card-inner relative w-full h-full duration-500 transform-style-3d shadow-md rounded-xl`;
+    inner.className = `flip-card-inner relative w-full h-full duration-500 transform-style-3d rounded-2xl`;
 
-    // Front (Cover)
+    // Front: Neumorphic Flat/Convex
     const front = document.createElement("div");
-    front.className = `card-front absolute w-full h-full bg-gradient-to-l from-gray-300 to-gray-400 rounded-xl backface-hidden flex items-center justify-center border-4 border-[#deebed]`;
-    // Optional: Add a pokeball icon or pattern to the back
-    front.innerHTML = `<span class="text-4xl opacity-20">?</span>`;
+    front.className = `card-front absolute w-full h-full neu-flat rounded-2xl backface-hidden flex items-center justify-center text-gray-400`;
+    front.innerHTML = `
+        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    `;
 
-    // Back (Pokemon Image)
+    // Back: Neumorphic Pressed/Inset
     const back = document.createElement("div");
-    back.className = `card-back absolute w-full h-full bg-gradient-to-l from-gray-200 to-gray-300 rounded-xl backface-hidden rotate-y-180 flex items-center justify-center border-4 border-[#deebed] overflow-hidden`;
+    back.className = `card-back absolute w-full h-full neu-pressed rounded-2xl backface-hidden rotate-y-180 flex items-center justify-center overflow-hidden border-2 border-transparent`;
 
     const imgWrapper = document.createElement("div");
-    imgWrapper.className = `bg-[#deebed] rounded-full p-2 w-[80%] h-[80%] flex items-center justify-center shadow-inner`;
+    imgWrapper.className = `w-[80%] h-[80%] flex items-center justify-center`;
 
     const img = document.createElement("img");
     img.src = pokemon.image;
     img.draggable = false;
-    img.className = `max-w-full max-h-full drop-shadow-md`;
+    img.className = `max-w-full max-h-full drop-shadow-lg`;
 
     imgWrapper.appendChild(img);
     back.appendChild(imgWrapper);
@@ -178,12 +215,19 @@ class Game {
 
     card.addEventListener("click", () => this.handleCardClick(card));
     this.pokeContainer.appendChild(card);
+
+    // Trigger entry animation
+    requestAnimationFrame(() => {
+      card.classList.remove("opacity-0");
+      card.style.animation = "none"; // reset after fade in
+      card.style.opacity = "1";
+    });
   }
 
   private handleCardClick(card: HTMLElement) {
     if (this.isProcessing) return;
-    if (card.classList.contains("open")) return; // Already open logic
-    if (card.classList.contains("matched")) return; // Already matched
+    if (card.classList.contains("open")) return;
+    if (card.classList.contains("matched")) return;
 
     this.playSound("card");
     this.openCard(card);
@@ -198,12 +242,19 @@ class Game {
     card.classList.add("open");
     const inner = card.querySelector(".flip-card-inner") as HTMLElement;
     inner.style.transform = "rotateY(180deg)";
+
+    // Add glowing border on open
+    const back = card.querySelector(".card-back");
+    back?.classList.add("border-[#6d5dfc/50]");
   }
 
   private closeCard(card: HTMLElement) {
     card.classList.remove("open");
     const inner = card.querySelector(".flip-card-inner") as HTMLElement;
     inner.style.transform = "rotateY(0deg)";
+
+    const back = card.querySelector(".card-back");
+    back?.classList.remove("border-[#6d5dfc/50]");
   }
 
   private checkMatch() {
@@ -223,13 +274,18 @@ class Game {
     this.sounds.success.currentTime = 0;
     this.sounds.success.play();
 
-    // Success animation or effect
     card1.classList.add("matched");
     card2.classList.add("matched");
 
-    // Add success animation class (scale pulse)
-    card1.classList.add("animate-ping-once");
-    card2.classList.add("animate-ping-once");
+    // Success emphasis
+    const back1 = card1.querySelector(".card-back") as HTMLElement;
+    const back2 = card2.querySelector(".card-back") as HTMLElement;
+
+    back1.style.borderColor = "#6d5dfc";
+    back2.style.borderColor = "#6d5dfc";
+
+    card1.classList.add("animate-bounce");
+    card2.classList.add("animate-bounce");
 
     this.openCards = [];
     this.isProcessing = false;
@@ -244,9 +300,14 @@ class Game {
     this.sounds.error.currentTime = 0;
     this.sounds.error.play();
 
-    // Error shake animation
     card1.classList.add("animate-shake");
     card2.classList.add("animate-shake");
+
+    // Red error glow
+    const back1 = card1.querySelector(".card-back") as HTMLElement;
+    const back2 = card2.querySelector(".card-back") as HTMLElement;
+    back1.style.borderColor = "#ff6b6b";
+    back2.style.borderColor = "#ff6b6b";
 
     setTimeout(() => {
       this.closeCard(card1);
@@ -254,6 +315,10 @@ class Game {
 
       card1.classList.remove("animate-shake");
       card2.classList.remove("animate-shake");
+
+      // Reset colors
+      back1.style.borderColor = "transparent";
+      back2.style.borderColor = "transparent";
 
       this.openCards = [];
       this.isProcessing = false;
@@ -263,7 +328,7 @@ class Game {
   private handleWin() {
     this.playSound("goodEnd");
     setTimeout(() => {
-      this.popupTable.classList.remove("opacity-0", "pointer-events-none");
+      this.showResultModal();
     }, 1000);
   }
 

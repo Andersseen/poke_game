@@ -1,43 +1,73 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import '../styles/global.css';
-
-// We will handle logic in client-side scripts
 ---
 
 <Layout>
-    <header class="fixed w-full max-h-[50px] z-20 flex justify-around items-center bg-white/10 backdrop-blur-sm shadow-sm md:max-h-[70px]">
-        <h2 class="header__text text-gray-600/60 font-zen uppercase text-xl md:text-2xl pt-1 tracking-widest select-none">Time: <span id="time" class="font-bold"></span></h2>
-        <h1 class="header__text text-gray-800 font-zen uppercase text-3xl md:text-5xl font-semibold select-none">Juego</h1>
-        <h3 class="header__text text-gray-600/60 font-zen uppercase text-lg md:text-2xl font-light select-none">Lvl: <span id="level">1</span></h3>
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-20 flex justify-between items-center px-4 md:px-8 py-4 bg-transparent pointer-events-none">
+        <!-- Back Button (Initially Hidden for Menu) -->
+        <button id="back-btn" class="neu-icon-btn w-12 h-12 md:w-14 md:h-14 pointer-events-auto opacity-0 transition-opacity duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+        </button>
+
+        <!-- Stats (Right Side) -->
+        <div class="neu-panel px-6 py-2 flex gap-6 items-center pointer-events-auto">
+             <div class="flex flex-col items-center">
+                <span class="text-xs font-light text-gray-500 uppercase tracking-widest">Lvl</span>
+                <span id="level" class="text-lg font-bold text-gray-700">1</span>
+            </div>
+            <div class="w-px h-8 bg-gray-300"></div>
+            <div class="flex flex-col items-center w-24">
+                <span class="text-xs font-light text-gray-500 uppercase tracking-widest">Time</span>
+                <span id="time" class="text-sm font-bold text-gray-700 font-mono">--:--</span>
+            </div>
+        </div>
     </header>
 
-    <main class="main pt-[50px] bg-gradient-to-r from-[#e4a26c] to-[#c7aae4] relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
-        <div id="pokes" class="poke__container flex flex-wrap items-center justify-center max-w-[800px] w-full p-4 gap-4 perspective-1000">
-            <!-- Cards will be injected by JS -->
+    <main class="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden p-4">
+        <!-- Title (Menu Only) -->
+        <h1 id="game-title" class="text-5xl md:text-7xl font-bold text-gray-700 mb-8 neu-text transition-all duration-500 select-none text-neu tracking-wider">
+            JUEGO
+        </h1>
+
+        <!-- Game Board Container -->
+        <div id="pokes" class="poke__container flex flex-wrap items-center justify-center max-w-[900px] w-full gap-6 perspective-1000 z-10">
+            <!-- Cards injected via JS -->
         </div>
 
-        <!-- Initial/Popup Overlay -->
-        <div id="table" class="fixed inset-0 z-10 bg-gradient-to-r from-[#e4a26c] to-[#c7aae4] flex flex-col items-center justify-center transition-all duration-500">
-            <section class="popup bg-white/30 backdrop-blur-md p-10 rounded-2xl shadow-xl flex flex-col items-center gap-8 max-w-md w-full mx-4">
-                <div class="popup__wrapper flex flex-col items-center gap-6 w-full">
-                    <h5 class="text-xl uppercase text-white drop-shadow-md text-center">Do you want change level?</h5>
-                    <div class="flex flex-row justify-around w-full gap-4">
-                        <span id="level_1" class="level-btn w-12 h-12 flex items-center justify-center border-4 border-[#deebed] text-2xl rounded-xl bg-[#e4d2d2] cursor-pointer hover:-translate-y-1 hover:shadow-lg active:translate-y-0.5 active:shadow-sm transition-all text-[#585151]">1</span>
-                        <span id="level_2" class="level-btn w-12 h-12 flex items-center justify-center border-4 border-[#deebed] text-2xl rounded-xl bg-[#e4d2d2] cursor-pointer hover:-translate-y-1 hover:shadow-lg active:translate-y-0.5 active:shadow-sm transition-all text-[#585151]">2</span>
-                        <span id="level_3" class="level-btn w-12 h-12 flex items-center justify-center border-4 border-[#deebed] text-2xl rounded-xl bg-[#e4d2d2] cursor-pointer hover:-translate-y-1 hover:shadow-lg active:translate-y-0.5 active:shadow-sm transition-all text-[#585151]">3</span>
-                    </div>
+        <!-- Menu / Popup Overlay -->
+        <div id="menu" class="absolute inset-0 z-0 flex flex-col items-center justify-center transition-all duration-500">
+             <!-- Spacer to push menu down slightly from title -->
+             <div class="h-32"></div>
+
+            <section class="neu-panel p-8 md:p-12 flex flex-col items-center gap-8 max-w-sm w-full mx-4 transition-transform duration-300">
+                <h5 class="text-lg uppercase text-gray-500 tracking-widest text-center">Select Level</h5>
+                
+                <div class="flex justify-center gap-6 w-full">
+                    <button id="level_1" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="1">1</button>
+                    <button id="level_2" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="2">2</button>
+                    <button id="level_3" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="3">3</button>
                 </div>
                 
-                <div id="start-btn" class="btn bg-[#e4d2d2] text-[#585151] border-4 border-[#deebed] px-8 py-3 text-2xl rounded-2xl shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl active:translate-y-0.5 active:shadow-md transition-all uppercase tracking-wider w-full text-center select-none">
-                    Start
-                </div>
-                
-                <div id="restart-btn" class="btn hidden bg-[#e4d2d2] text-[#585151] border-4 border-[#deebed] px-8 py-3 text-2xl rounded-2xl shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl active:translate-y-0.5 active:shadow-md transition-all uppercase tracking-wider w-full text-center select-none">
-                    Restart?
-                </div>
+                <button id="start-btn" class="neu-panel px-12 py-4 text-xl font-bold text-gray-700 tracking-wider hover:text-[#6d5dfc] transition-colors active:shadow-inner active:neu-pressed w-full">
+                    START
+                </button>
             </section>
         </div>
+
+        <!-- Result Popup (Hidden by default) -->
+         <div id="result-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="neu-panel p-10 flex flex-col items-center gap-6">
+                 <h2 class="text-3xl font-bold text-[#6d5dfc] text-neu">YOU WON!</h2>
+                 <p class="text-gray-500">Ready for the next challenge?</p>
+                 <button id="restart-btn" class="neu-panel px-10 py-3 text-lg font-bold hover:text-[#6d5dfc] active:neu-pressed">
+                    PLAY AGAIN
+                </button>
+            </div>
+         </div>
     </main>
 
     <!-- Audio Elements -->
@@ -48,3 +78,23 @@ import '../styles/global.css';
     <audio src="/assets/sounds/level.wav" class="sound" id="sound__level" preload="auto" loop></audio>
     <audio src="/assets/sounds/good_end.wav" class="sound" id="sound__good-end" preload="auto"></audio>
 </Layout>
+
+<script>
+    // Simple script to handle level selection visual state
+    const levelBtns = document.querySelectorAll('.level-btn');
+    levelBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            levelBtns.forEach(b => {
+                b.classList.remove('neu-pressed');
+                b.classList.add('neu-icon-btn');
+                b.style.color = 'var(--text-main)';
+            });
+            const target = e.target as HTMLElement;
+            target.classList.remove('neu-icon-btn');
+            target.classList.add('neu-pressed'); // "Pressed" state for selected
+            target.style.color = 'var(--accent)';
+        });
+    });
+    // Set level 1 active by default
+    document.getElementById('level_1')?.click();
+</script>
