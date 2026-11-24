@@ -1,1 +1,203 @@
-PLACEHOLDER_INDEX
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/global.css';
+---
+
+<Layout>
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-20 flex justify-between items-center px-4 md:px-8 py-4 bg-transparent pointer-events-none">
+
+        <!-- Left: Control Pill (Back, Theme, Sound, Help) -->
+        <div class="neu-panel px-3 py-2 flex items-center gap-3 pointer-events-auto rounded-full shadow-sm">
+             <button id="back-btn" class="neu-icon-btn w-10 h-10 md:w-12 md:h-12 opacity-50 pointer-events-none transition-all duration-300 transform scale-90" aria-label="Back to Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </button>
+
+            <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 opacity-50"></div>
+
+            <button id="theme-btn" class="neu-icon-btn w-10 h-10 md:w-12 md:h-12" aria-label="Toggle Theme">
+                <!-- Sun Icon (for Dark Mode) -->
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <!-- Moon Icon (for Light Mode) -->
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+
+            <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 opacity-50"></div>
+
+            <button id="mute-btn" class="neu-icon-btn w-10 h-10 md:w-12 md:h-12" aria-label="Toggle Music">
+                <!-- Sound On -->
+                <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z" />
+                </svg>
+                <!-- Sound Off -->
+                <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6" />
+                </svg>
+            </button>
+
+            <button id="help-btn" class="neu-icon-btn w-10 h-10 md:w-12 md:h-12" aria-label="How to Play">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Stats (Right Side) -->
+        <div class="neu-panel px-6 py-2 flex gap-6 items-center pointer-events-auto rounded-xl">
+             <div class="flex flex-col items-center">
+                <span class="text-[0.6rem] md:text-xs font-light opacity-60 uppercase tracking-widest">Lvl</span>
+                <span id="level" class="text-base md:text-lg font-bold">1</span>
+            </div>
+            <div class="w-px h-8 bg-current opacity-20"></div>
+            <div class="flex flex-col items-center min-w-[3rem] md:min-w-[4rem]">
+                <span class="text-[0.6rem] md:text-xs font-light opacity-60 uppercase tracking-widest">Time</span>
+                <span id="time" class="text-xs md:text-sm font-bold font-mono">--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden p-4">
+        <!-- Title (Menu Only) -->
+        <h1 id="game-title" class="text-5xl md:text-7xl font-bold mb-8 neu-text transition-all duration-500 select-none text-neu tracking-wider opacity-80 mt-16 md:mt-0">
+            JUEGO
+        </h1>
+
+        <!-- Game Board Container -->
+        <div id="pokes" class="poke__container flex flex-wrap items-center justify-center max-w-[900px] w-full gap-4 perspective-1000 z-10">
+            <!-- Cards injected via JS -->
+        </div>
+
+        <!-- Menu / Popup Overlay -->
+        <div id="menu" class="absolute inset-0 z-0 flex flex-col items-center justify-center transition-all duration-500">
+             <div class="h-32"></div>
+
+            <section class="neu-panel p-8 md:p-10 flex flex-col items-center gap-8 max-w-md w-full mx-4 transition-transform duration-300">
+                <h5 class="text-lg uppercase opacity-60 tracking-widest text-center">Select Level</h5>
+
+                <div class="grid grid-cols-3 gap-5 w-full justify-items-center">
+                    <div class="flex flex-col items-center gap-1">
+                        <button id="level_1" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="1">1</button>
+                        <span class="text-[0.55rem] uppercase tracking-widest opacity-50">Tutorial</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <button id="level_2" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="2">2</button>
+                        <span class="text-[0.55rem] uppercase tracking-widest opacity-50">Tutorial</span>
+                    </div>
+                    <button id="level_3" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="3">3</button>
+                    <button id="level_4" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="4">4</button>
+                    <button id="level_5" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="5">5</button>
+                    <button id="level_6" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="6">6</button>
+                </div>
+
+                <and-button id="start-btn" variant="default" class="neu-btn-primary w-full text-xl font-bold tracking-wider">
+                    START
+                </and-button>
+            </section>
+        </div>
+
+        <!-- Tutorial Overlay (optional, re-openable via the ? button) -->
+        <div id="tutorial-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="neu-panel p-8 md:p-10 flex flex-col items-center gap-6 max-w-md w-full mx-4">
+                <h2 class="text-2xl font-bold text-[var(--primary)] text-neu uppercase tracking-wider">Cómo jugar</h2>
+
+                <ol class="flex flex-col gap-4 text-sm md:text-base opacity-80 list-none w-full">
+                    <li class="flex items-start gap-3">
+                        <span class="neu-icon-btn w-8 h-8 shrink-0 font-bold text-[var(--primary)]">1</span>
+                        <span>Toca una carta para revelar el Pokémon que esconde.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="neu-icon-btn w-8 h-8 shrink-0 font-bold text-[var(--primary)]">2</span>
+                        <span>Encuentra su pareja. Si fallas, ambas se ocultan de nuevo.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="neu-icon-btn w-8 h-8 shrink-0 font-bold text-[var(--primary)]">3</span>
+                        <span>¡Emparéjalas todas antes de que se agote el tiempo!</span>
+                    </li>
+                </ol>
+
+                <p class="text-xs opacity-50 text-center">
+                    Los niveles 1 y 2 son de práctica: perfectos para calentar.<br/>
+                    Puedes reabrir esta ayuda cuando quieras desde el botón ?
+                </p>
+
+                <and-button id="tutorial-ok-btn" variant="default" class="neu-btn-primary w-full text-lg font-bold tracking-wider">
+                    ¡ENTENDIDO!
+                </and-button>
+            </div>
+        </div>
+
+        <!-- Result Popup -->
+         <div id="result-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="neu-panel p-10 flex flex-col items-center gap-6 max-w-sm w-full mx-4">
+                 <h2 id="result-title" class="text-3xl font-bold text-[var(--success)] text-neu">¡NIVEL SUPERADO!</h2>
+                 <p id="result-text" class="opacity-70 text-center">Ready for the next challenge?</p>
+                 <and-button id="next-level-btn" variant="default" class="neu-btn-primary w-full text-lg font-bold tracking-wider">
+                    NEXT LEVEL
+                </and-button>
+                 <and-button id="restart-btn" variant="default" class="neu-btn w-full text-lg font-bold tracking-wider">
+                    MENU
+                </and-button>
+            </div>
+         </div>
+
+        <!-- Game Over Popup -->
+         <div id="gameover-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="neu-panel p-10 flex flex-col items-center gap-6 max-w-sm w-full mx-4">
+                 <h2 class="text-3xl font-bold text-[var(--error)] text-neu">¡SE ACABÓ EL TIEMPO!</h2>
+                 <p class="opacity-70 text-center">La memoria también se entrena. ¡Inténtalo de nuevo!</p>
+                 <and-button id="retry-btn" variant="default" class="neu-btn-primary w-full text-lg font-bold tracking-wider">
+                    REINTENTAR
+                </and-button>
+            </div>
+         </div>
+    </main>
+
+    <!-- Audio Elements -->
+    <audio src="/assets/sounds/success.wav" class="sound" id="sound__success" preload="auto"></audio>
+    <audio src="/assets/sounds/card.wav" class="sound" id="sound__card" preload="auto"></audio>
+    <audio src="/assets/sounds/error.wav" class="sound" id="sound__error" preload="auto"></audio>
+    <audio src="/assets/sounds/open.wav" class="sound" id="sound__start" preload="auto"></audio>
+    <audio src="/assets/sounds/level.wav" class="sound" id="sound__level" preload="auto" loop></audio>
+    <audio src="/assets/sounds/good_end.wav" class="sound" id="sound__good-end" preload="auto"></audio>
+</Layout>
+
+<script>
+    // Register the and-button custom element from @andersseen/web-components.
+    // (Direct component import: the lazy Stencil loader 404s under Vite builds.)
+    import '@andersseen/web-components/dist/components/and-button.js';
+
+    // Theme Switcher Logic
+    const themeBtn = document.getElementById('theme-btn');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
+    const html = document.documentElement;
+
+    // Check saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+        sunIcon?.classList.remove('hidden');
+        moonIcon?.classList.add('hidden');
+    }
+
+    themeBtn?.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        const isDark = html.classList.contains('dark');
+
+        if (isDark) {
+            sunIcon?.classList.remove('hidden');
+            moonIcon?.classList.add('hidden');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            sunIcon?.classList.add('hidden');
+            moonIcon?.classList.remove('hidden');
+            localStorage.setItem('theme', 'light');
+        }
+    });
+</script>
