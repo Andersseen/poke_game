@@ -120,6 +120,103 @@
       -9px -9px 18px var(--shadow-light);
   }
 
+  /* Neumorphic skin for <and-button> (via ::part) */
+  and-button {
+    display: block;
+  }
+
+  .neu-btn::part(button),
+  .neu-btn-primary::part(button) {
+    width: 100%;
+    padding: 1rem 2.5rem;
+    border-radius: 20px;
+    border: none;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: inherit;
+    letter-spacing: inherit;
+    box-shadow:
+      9px 9px 18px var(--shadow-dark),
+      -9px -9px 18px var(--shadow-light);
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+  }
+
+  .neu-btn-primary::part(button) {
+    color: var(--primary);
+  }
+
+  .neu-btn::part(button):hover,
+  .neu-btn-primary::part(button):hover {
+    transform: translateY(-1px);
+  }
+
+  .neu-btn::part(button):active,
+  .neu-btn-primary::part(button):active {
+    box-shadow:
+      inset 4px 4px 8px var(--shadow-dark),
+      inset -4px -4px 8px var(--shadow-light);
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Card size scales with the number of pairs on the board */
+  .pokemon-card {
+    --card-size: 150px;
+    width: var(--card-size);
+    height: var(--card-size);
+  }
+
+  .pairs-2 .pokemon-card {
+    --card-size: 140px;
+  }
+
+  .pairs-4 .pokemon-card {
+    --card-size: 115px;
+  }
+
+  .pairs-6 .pokemon-card {
+    --card-size: 95px;
+  }
+
+  .pairs-8 .pokemon-card {
+    --card-size: 80px;
+  }
+
+  .pairs-10 .pokemon-card {
+    --card-size: 70px;
+  }
+
+  .pairs-12 .pokemon-card {
+    --card-size: 62px;
+  }
+
+  @media (min-width: 768px) {
+    .pairs-2 .pokemon-card {
+      --card-size: 170px;
+    }
+    .pairs-4 .pokemon-card {
+      --card-size: 140px;
+    }
+    .pairs-6 .pokemon-card {
+      --card-size: 120px;
+    }
+    .pairs-8 .pokemon-card {
+      --card-size: 100px;
+    }
+    .pairs-10 .pokemon-card {
+      --card-size: 88px;
+    }
+    .pairs-12 .pokemon-card {
+      --card-size: 78px;
+    }
+  }
+
+  /* Countdown warning state */
+  .time-warning {
+    color: var(--error);
+    animation: timePulse 1s ease-in-out infinite;
+  }
+
   /* 3D and Animation Utilities */
   .perspective-1000 {
     perspective: 1000px;
@@ -197,5 +294,17 @@
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes timePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.15);
   }
 }
