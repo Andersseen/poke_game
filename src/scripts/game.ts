@@ -1,8 +1,29 @@
+import { MusicEngine } from "./music";
+
 interface Pokemon {
   id: number;
   name: string;
   image: string;
 }
+
+interface LevelConfig {
+  level: number;
+  pairs: number;
+  /** Seconds available to clear the level. */
+  time: number;
+}
+
+const LEVELS: LevelConfig[] = [
+  { level: 1, pairs: 6, time: 75 },
+  { level: 2, pairs: 8, time: 100 },
+  { level: 3, pairs: 10, time: 120 },
+  { level: 4, pairs: 12, time: 150 },
+];
+
+/** Practice round (2×2, 4 cards) offered before the real levels. */
+const TUTORIAL: LevelConfig = { level: 0, pairs: 2, time: 90 };
+
+const TUTORIAL_SEEN_KEY = "poke_tutorial_seen";
 
 class Game {
   private pokeContainer: HTMLElement;
@@ -14,7 +35,21 @@ class Game {
   private backBtn: HTMLElement;
 
   private resultModal: HTMLElement;
+  private resultTitle: HTMLElement;
+  private resultText: HTMLElement;
   private restartBtn: HTMLElement;
+  private nextLevelBtn: HTMLElement;
+
+  private gameoverModal: HTMLElement;
+  private retryBtn: HTMLElement;
+
+  private tutorialModal: HTMLElement;
+  private tutorialPlayBtn: HTMLElement;
+  private tutorialSkipBtn: HTMLElement;
+  private helpBtn: HTMLElement;
+  private muteBtn: HTMLElement;
+  private soundOnIcon: HTMLElement;
+  private soundOffIcon: HTMLElement;
 
   private levelBtns: NodeListOf<HTMLElement>;
 
@@ -25,6 +60,13 @@ class Game {
   private totalPairs: number = 0;
   private matchedPairs: number = 0;
   private gameTitle: HTMLElement;
+
+  private timeLeft: number = 0;
+  private timerId: number | null = null;
+  private playing: boolean = false;
+  private inTutorial: boolean = false;
+
+  private music = new MusicEngine();
 
   private sounds = {
     success: document.getElementById("sound__success") as HTMLAudioElement,
@@ -45,7 +87,25 @@ class Game {
     this.backBtn = document.querySelector("#back-btn") as HTMLElement;
 
     this.resultModal = document.querySelector("#result-modal") as HTMLElement;
+    this.resultTitle = document.querySelector("#result-title") as HTMLElement;
+    this.resultText = document.querySelector("#result-text") as HTMLElement;
     this.restartBtn = document.querySelector("#restart-btn") as HTMLElement;
+    this.nextLevelBtn = document.querySelector("#next-level-btn") as HTMLElement;
+
+    this.gameoverModal = document.querySelector("#gameover-modal") as HTMLElement;
+    this.retryBtn = document.querySelector("#retry-btn") as HTMLElement;
+
+    this.tutorialModal = document.querySelector("#tutorial-modal") as HTMLElement;
+    this.tutorialPlayBtn = document.querySelector(
+      "#tutorial-play-btn",
+    ) as HTMLElement;
+    this.tutorialSkipBtn = document.querySelector(
+      "#tutorial-skip-btn",
+    ) as HTMLElement;
+    this.helpBtn = document.querySelector("#help-btn") as HTMLElement;
+    this.muteBtn = document.querySelector("#mute-btn") as HTMLElement;
+    this.soundOnIcon = document.querySelector("#sound-on-icon") as HTMLElement;
+    this.soundOffIcon = document.querySelector("#sound-off-icon") as HTMLElement;
 
     this.levelBtns = document.querySelectorAll(".level-btn");
     this.gameTitle = document.querySelector("#game-title") as HTMLElement;
@@ -53,22 +113,255 @@ class Game {
     this.init();
   }
 
-  private async init() {
-    await this.fetchPokemons();
-    this.addEventListeners();
-    this.updateTime();
+  private get levelConfig(): LevelConfig {
+    if (this.inTutorial) return TUTORIAL;
+    return LEVELS.find((l) => l.level === this.currentLevel) ?? LEVELS[0];
   }
 
-  private updateTime() {
-    const update = () => {
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, "0");
-      const minutes = now.getMinutes().toString().padStart(2, "0");
-      this.timeDisplay.innerText = `${hours}:${minutes}`;
+  private async init() {
+    this.updateMuteIcon();
+    this.addEventListeners();
+    this.maybeShowTutorial();
+
+    // Browsers require a user gesture before audio can start.
+    const unlock = () => {
+      this.music.play("menu");
+      document.removeEventListener("pointerdown", unlock);
     };
-    update();
-    setInterval(update, 1000);
+    document.addEventListener("pointerdown", unlock);
+
+    await this.fetchPokemons();
   }
+
+  /* ────────────────────────── Tutorial ────────────────────────── */
+
+  private maybeShowTutorial() {
+    if (localStorage.getItem(TUTORIAL_SEEN_KEY) === "1") return;
+    this.showTutorial();
+  }
+
+  private showTutorial() {
+    this.tutorialModal.classList.remove("opacity-0", "pointer-events-none");
+  }
+
+  private hideTutorial() {
+    this.tutorialModal.classList.add("opacity-0", "pointer-events-none");
+    localStorage.setItem(TUTORIAL_SEEN_KEY, "1");
+  }
+
+  private startTutorial() {
+    this.hideTutorial();
+    this.inTutorial = true;
+    this.levelDisplay.innerText = "T";
+    this.startGame();
+  }
+
+  /* ────────────────────────── Timer ───────────────────────────── */
+
+  private startTimer() {
+    this.stopTimer();
+    this.timeLeft = this.levelConfig.time;
+    this.renderTime();
+    this.timerId = window.setInterval(() => {
+      this.timeLeft--;
+      this.renderTime();
+      if (this.timeLeft <= 0) {
+        this.handleGameOver();
+      }
+    }, 1000);
+  }
+
+  private stopTimer() {
+    if (this.timerId !== null) {
+      clearInterval(this.timerId);
+      this.timerId = null;
+    }
+    this.timeDisplay.classList.remove("time-warning");
+  }
+
+  private renderTime() {
+    const clamped = Math.max(0, this.timeLeft);
+    const minutes = Math.floor(clamped / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = (clamped % 60).toString().padStart(2, "0");
+    this.timeDisplay.innerText = `${minutes}:${seconds}`;
+    this.timeDisplay.classList.toggle("time-warning", clamped <= 10);
+  }
+
+  private handleGameOver() {
+    this.stopTimer();
+    this.playing = false;
+    this.playSound("error");
+    this.music.play("menu");
+    setTimeout(() => {
+      this.gameoverModal.classList.remove("opacity-0", "pointer-events-none");
+    }, 400);
+  }
+
+  /* ─────────────────────── Event wiring ───────────────────────── */
+
+  private addEventListeners() {
+    this.startBtn.addEventListener("click", () => this.startGame());
+
+    this.restartBtn.addEventListener("click", () => {
+      this.hideResultModal();
+      this.stopGame();
+    });
+
+    this.nextLevelBtn.addEventListener("click", () => {
+      this.hideResultModal();
+      if (this.inTutorial) {
+        this.selectLevel(1);
+      } else if (this.currentLevel < LEVELS.length) {
+        this.selectLevel(this.currentLevel + 1);
+      }
+      this.startGame();
+    });
+
+    this.retryBtn.addEventListener("click", () => {
+      this.hideGameOverModal();
+      this.startGame();
+    });
+
+    this.backBtn.addEventListener("click", () => this.stopGame());
+
+    this.tutorialPlayBtn.addEventListener("click", () => this.startTutorial());
+    this.tutorialSkipBtn.addEventListener("click", () => this.hideTutorial());
+    this.helpBtn.addEventListener("click", () => this.showTutorial());
+
+    this.muteBtn.addEventListener("click", () => {
+      this.music.toggleMute();
+      this.updateMuteIcon();
+    });
+
+    this.levelBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const level = parseInt(btn.getAttribute("data-level") || "1");
+        this.selectLevel(level);
+      });
+    });
+  }
+
+  private selectLevel(level: number) {
+    this.inTutorial = false;
+    this.currentLevel = level;
+    this.levelDisplay.innerText = level.toString();
+
+    this.levelBtns.forEach((b) => {
+      const isActive = parseInt(b.getAttribute("data-level") || "1") === level;
+      b.classList.toggle("neu-pressed", isActive);
+      b.classList.toggle("neu-icon-btn", !isActive);
+      b.style.color = isActive ? "var(--primary)" : "var(--foreground)";
+    });
+  }
+
+  private updateMuteIcon() {
+    const muted = this.music.isMuted;
+    this.soundOnIcon.classList.toggle("hidden", muted);
+    this.soundOffIcon.classList.toggle("hidden", !muted);
+  }
+
+  /* ──────────────────────── Game flow ─────────────────────────── */
+
+  private startGame() {
+    this.hideGameOverModal();
+    this.menuContainer.classList.add("opacity-0", "pointer-events-none");
+    this.gameTitle.classList.add(
+      "scale-50",
+      "-translate-y-24",
+      "opacity-0",
+      "md:opacity-100",
+    );
+
+    // Show back button
+    this.backBtn.classList.remove(
+      "opacity-50",
+      "pointer-events-none",
+      "scale-90",
+    );
+    this.backBtn.classList.add(
+      "opacity-100",
+      "pointer-events-auto",
+      "scale-100",
+    );
+
+    this.pokeContainer.innerHTML = "";
+    this.pokeContainer.className = this.pokeContainer.className
+      .replace(/\bpairs-\d+\b/g, "")
+      .trim();
+    this.pokeContainer.classList.add(`pairs-${this.levelConfig.pairs}`);
+
+    this.playSound("start");
+    this.music.play("game");
+    this.playing = true;
+
+    const deck = this.prepareDeck();
+
+    deck.forEach((pokemon, index) => {
+      setTimeout(() => {
+        // The player may have gone back to the menu while cards were dealing.
+        if (this.playing) this.createCard(pokemon);
+      }, index * 100);
+    });
+
+    this.matchedPairs = 0;
+    this.totalPairs = deck.length / 2;
+
+    this.startTimer();
+  }
+
+  private stopGame() {
+    this.playing = false;
+    this.inTutorial = false;
+    this.levelDisplay.innerText = this.currentLevel.toString();
+    this.stopTimer();
+    this.menuContainer.classList.remove("opacity-0", "pointer-events-none");
+    this.gameTitle.classList.remove("scale-50", "-translate-y-24", "opacity-0");
+
+    // Hide back button (return to dim/inactive state)
+    this.backBtn.classList.add("opacity-50", "pointer-events-none", "scale-90");
+    this.backBtn.classList.remove(
+      "opacity-100",
+      "pointer-events-auto",
+      "scale-100",
+    );
+
+    this.pokeContainer.innerHTML = "";
+    this.openCards = [];
+    this.music.play("menu");
+  }
+
+  private showResultModal() {
+    const isLast =
+      !this.inTutorial && this.currentLevel >= LEVELS.length;
+
+    if (this.inTutorial) {
+      this.resultTitle.innerText = "¡TUTORIAL COMPLETADO!";
+      this.resultText.innerText =
+        "Ya sabes jugar. Ahora sí: ¡a por el Nivel 1!";
+    } else {
+      this.resultTitle.innerText = isLast
+        ? "¡MAESTRO POKÉMON!"
+        : "¡NIVEL SUPERADO!";
+      this.resultText.innerText = isLast
+        ? "Has completado todos los niveles. ¡Increíble memoria!"
+        : `Te sobraron ${Math.max(0, this.timeLeft)}s. ¿Listo para el nivel ${this.currentLevel + 1}?`;
+    }
+
+    this.nextLevelBtn.classList.toggle("hidden", isLast);
+    this.resultModal.classList.remove("opacity-0", "pointer-events-none");
+  }
+
+  private hideResultModal() {
+    this.resultModal.classList.add("opacity-0", "pointer-events-none");
+  }
+
+  private hideGameOverModal() {
+    this.gameoverModal.classList.add("opacity-0", "pointer-events-none");
+  }
+
+  /* ─────────────────────── Deck & cards ───────────────────────── */
 
   private async fetchPokemons() {
     const ids = Array.from({ length: 30 }, (_, i) => i * 3 + 1);
@@ -94,94 +387,8 @@ class Game {
     this.pokemonsArray = results.filter((p) => p !== null) as Pokemon[];
   }
 
-  private addEventListeners() {
-    this.startBtn.addEventListener("click", () => this.startGame());
-    this.restartBtn.addEventListener("click", () => {
-      this.hideResultModal();
-      this.showMenu();
-    });
-
-    this.backBtn.addEventListener("click", () => this.stopGame());
-
-    this.levelBtns.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const el = e.target as HTMLElement;
-        const level = parseInt(el.getAttribute("data-level") || "1");
-        this.currentLevel = level;
-        this.levelDisplay.innerText = level.toString();
-      });
-    });
-  }
-
-  private startGame() {
-    this.menuContainer.classList.add("opacity-0", "pointer-events-none");
-    this.gameTitle.classList.add(
-      "scale-50",
-      "-translate-y-24",
-      "opacity-0",
-      "md:opacity-100",
-    );
-
-    // Show back button
-    this.backBtn.classList.remove(
-      "opacity-50",
-      "pointer-events-none",
-      "scale-90",
-    );
-    this.backBtn.classList.add(
-      "opacity-100",
-      "pointer-events-auto",
-      "scale-100",
-    );
-
-    this.pokeContainer.innerHTML = "";
-
-    this.playSound("start");
-
-    const deck = this.prepareDeck();
-
-    deck.forEach((pokemon, index) => {
-      setTimeout(() => {
-        this.createCard(pokemon);
-      }, index * 100);
-    });
-
-    this.matchedPairs = 0;
-    this.totalPairs = deck.length / 2;
-  }
-
-  private stopGame() {
-    this.menuContainer.classList.remove("opacity-0", "pointer-events-none");
-    this.gameTitle.classList.remove("scale-50", "-translate-y-24", "opacity-0");
-
-    // Hide back button (return to dim/inactive state)
-    this.backBtn.classList.add("opacity-50", "pointer-events-none", "scale-90");
-    this.backBtn.classList.remove(
-      "opacity-100",
-      "pointer-events-auto",
-      "scale-100",
-    );
-
-    this.pokeContainer.innerHTML = "";
-    this.openCards = [];
-  }
-
-  private showResultModal() {
-    this.resultModal.classList.remove("opacity-0", "pointer-events-none");
-  }
-
-  private hideResultModal() {
-    this.resultModal.classList.add("opacity-0", "pointer-events-none");
-  }
-
-  private showMenu() {
-    this.stopGame();
-  }
-
   private prepareDeck(): Pokemon[] {
-    let count = 2;
-    if (this.currentLevel === 2) count = 4;
-    if (this.currentLevel === 3) count = 6;
+    const count = this.levelConfig.pairs;
 
     const shuffled = [...this.pokemonsArray].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, count);
@@ -191,7 +398,7 @@ class Game {
 
   private createCard(pokemon: Pokemon) {
     const card = document.createElement("div");
-    card.className = `pokemon-card relative w-[100px] h-[100px] md:w-[140px] md:h-[140px] m-4 cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95 select-none perspective-1000 opacity-0 animate-fade-in-up`;
+    card.className = `pokemon-card relative cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95 select-none perspective-1000 opacity-0 animate-fade-in-up`;
     card.style.animationFillMode = "forwards";
     card.dataset.id = pokemon.id.toString();
 
@@ -234,6 +441,7 @@ class Game {
   }
 
   private handleCardClick(card: HTMLElement) {
+    if (!this.playing) return;
     if (this.isProcessing) return;
     if (card.classList.contains("open")) return;
     if (card.classList.contains("matched")) return;
@@ -329,6 +537,8 @@ class Game {
   }
 
   private handleWin() {
+    this.playing = false;
+    this.stopTimer();
     this.playSound("goodEnd");
     setTimeout(() => {
       this.showResultModal();

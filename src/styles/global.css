@@ -120,6 +120,115 @@
       -9px -9px 18px var(--shadow-light);
   }
 
+  /* Neumorphic skin for <and-button> (via ::part) */
+  and-button {
+    display: block;
+  }
+
+  .neu-btn::part(button),
+  .neu-btn-primary::part(button) {
+    width: 100%;
+    padding: 1rem 2.5rem;
+    border-radius: 20px;
+    border: none;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: inherit;
+    letter-spacing: inherit;
+    box-shadow:
+      9px 9px 18px var(--shadow-dark),
+      -9px -9px 18px var(--shadow-light);
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+  }
+
+  .neu-btn-primary::part(button) {
+    color: var(--primary);
+  }
+
+  .neu-btn::part(button):hover,
+  .neu-btn-primary::part(button):hover {
+    transform: translateY(-1px);
+  }
+
+  .neu-btn::part(button):active,
+  .neu-btn-primary::part(button):active {
+    box-shadow:
+      inset 4px 4px 8px var(--shadow-dark),
+      inset -4px -4px 8px var(--shadow-light);
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Square board: fixed grid columns per level, no ragged rows */
+  .poke__container {
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 900px;
+    margin-inline: auto;
+  }
+
+  .pokemon-card {
+    width: var(--card-size, 150px);
+    height: var(--card-size, 150px);
+  }
+
+  .pairs-2 {
+    --card-size: 120px;
+    grid-template-columns: repeat(2, var(--card-size));
+  }
+
+  .pairs-6 {
+    --card-size: 76px;
+    grid-template-columns: repeat(4, var(--card-size));
+  }
+
+  .pairs-8 {
+    --card-size: 76px;
+    grid-template-columns: repeat(4, var(--card-size));
+  }
+
+  .pairs-10 {
+    --card-size: 58px;
+    grid-template-columns: repeat(5, var(--card-size));
+  }
+
+  .pairs-12 {
+    --card-size: 74px;
+    grid-template-columns: repeat(4, var(--card-size));
+  }
+
+  @media (min-width: 768px) {
+    .poke__container {
+      gap: 1rem;
+    }
+    .pairs-2 {
+      --card-size: 150px;
+    }
+    .pairs-6 {
+      --card-size: 120px;
+    }
+    .pairs-8 {
+      --card-size: 115px;
+    }
+    .pairs-10 {
+      --card-size: 95px;
+    }
+    .pairs-12 {
+      --card-size: 80px;
+      grid-template-columns: repeat(6, var(--card-size));
+    }
+  }
+
+  /* Countdown warning state */
+  .time-warning {
+    color: var(--error);
+    animation: timePulse 1s ease-in-out infinite;
+  }
+
   /* 3D and Animation Utilities */
   .perspective-1000 {
     perspective: 1000px;
@@ -197,5 +306,17 @@
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes timePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.15);
   }
 }
