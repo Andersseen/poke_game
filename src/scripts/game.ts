@@ -11,17 +11,17 @@ interface LevelConfig {
   pairs: number;
   /** Seconds available to clear the level. */
   time: number;
-  tutorial?: boolean;
 }
 
 const LEVELS: LevelConfig[] = [
-  { level: 1, pairs: 2, time: 45, tutorial: true },
-  { level: 2, pairs: 4, time: 60, tutorial: true },
-  { level: 3, pairs: 6, time: 90 },
-  { level: 4, pairs: 8, time: 105 },
-  { level: 5, pairs: 10, time: 120 },
-  { level: 6, pairs: 12, time: 150 },
+  { level: 1, pairs: 6, time: 75 },
+  { level: 2, pairs: 8, time: 100 },
+  { level: 3, pairs: 10, time: 120 },
+  { level: 4, pairs: 12, time: 150 },
 ];
+
+/** Practice round (2×2, 4 cards) offered before the real levels. */
+const TUTORIAL: LevelConfig = { level: 0, pairs: 2, time: 90 };
 
 const TUTORIAL_SEEN_KEY = "poke_tutorial_seen";
 
@@ -44,7 +44,8 @@ class Game {
   private retryBtn: HTMLElement;
 
   private tutorialModal: HTMLElement;
-  private tutorialOkBtn: HTMLElement;
+  private tutorialPlayBtn: HTMLElement;
+  private tutorialSkipBtn: HTMLElement;
   private helpBtn: HTMLElement;
   private muteBtn: HTMLElement;
   private soundOnIcon: HTMLElement;
@@ -63,6 +64,7 @@ class Game {
   private timeLeft: number = 0;
   private timerId: number | null = null;
   private playing: boolean = false;
+  private inTutorial: boolean = false;
 
   private music = new MusicEngine();
 
@@ -94,7 +96,12 @@ class Game {
     this.retryBtn = document.querySelector("#retry-btn") as HTMLElement;
 
     this.tutorialModal = document.querySelector("#tutorial-modal") as HTMLElement;
-    this.tutorialOkBtn = document.querySelector("#tutorial-ok-btn") as HTMLElement;
+    this.tutorialPlayBtn = document.querySelector(
+      "#tutorial-play-btn",
+    ) as HTMLElement;
+    this.tutorialSkipBtn = document.querySelector(
+      "#tutorial-skip-btn",
+    ) as HTMLElement;
     this.helpBtn = document.querySelector("#help-btn") as HTMLElement;
     this.muteBtn = document.querySelector("#mute-btn") as HTMLElement;
     this.soundOnIcon = document.querySelector("#sound-on-icon") as HTMLElement;
@@ -107,6 +114,7 @@ class Game {
   }
 
   private get levelConfig(): LevelConfig {
+    if (this.inTutorial) return TUTORIAL;
     return LEVELS.find((l) => l.level === this.currentLevel) ?? LEVELS[0];
   }
 
@@ -139,6 +147,13 @@ class Game {
   private hideTutorial() {
     this.tutorialModal.classList.add("opacity-0", "pointer-events-none");
     localStorage.setItem(TUTORIAL_SEEN_KEY, "1");
+  }
+
+  private startTutorial() {
+    this.hideTutorial();
+    this.inTutorial = true;
+    this.levelDisplay.innerText = "T";
+    this.startGame();
   }
 
   /* ────────────────────────── Timer ───────────────────────────── */
@@ -196,7 +211,9 @@ class Game {
 
     this.nextLevelBtn.addEventListener("click", () => {
       this.hideResultModal();
-      if (this.currentLevel < LEVELS.length) {
+      if (this.inTutorial) {
+        this.selectLevel(1);
+      } else if (this.currentLevel < LEVELS.length) {
         this.selectLevel(this.currentLevel + 1);
       }
       this.startGame();
@@ -209,7 +226,8 @@ class Game {
 
     this.backBtn.addEventListener("click", () => this.stopGame());
 
-    this.tutorialOkBtn.addEventListener("click", () => this.hideTutorial());
+    this.tutorialPlayBtn.addEventListener("click", () => this.startTutorial());
+    this.tutorialSkipBtn.addEventListener("click", () => this.hideTutorial());
     this.helpBtn.addEventListener("click", () => this.showTutorial());
 
     this.muteBtn.addEventListener("click", () => {
@@ -226,6 +244,7 @@ class Game {
   }
 
   private selectLevel(level: number) {
+    this.inTutorial = false;
     this.currentLevel = level;
     this.levelDisplay.innerText = level.toString();
 
@@ -294,6 +313,8 @@ class Game {
 
   private stopGame() {
     this.playing = false;
+    this.inTutorial = false;
+    this.levelDisplay.innerText = this.currentLevel.toString();
     this.stopTimer();
     this.menuContainer.classList.remove("opacity-0", "pointer-events-none");
     this.gameTitle.classList.remove("scale-50", "-translate-y-24", "opacity-0");
@@ -312,15 +333,21 @@ class Game {
   }
 
   private showResultModal() {
-    const cfg = this.levelConfig;
-    const isLast = cfg.level >= LEVELS.length;
+    const isLast =
+      !this.inTutorial && this.currentLevel >= LEVELS.length;
 
-    this.resultTitle.innerText = isLast
-      ? "¡MAESTRO POKÉMON!"
-      : "¡NIVEL SUPERADO!";
-    this.resultText.innerText = isLast
-      ? "Has completado todos los niveles. ¡Increíble memoria!"
-      : `Te sobraron ${Math.max(0, this.timeLeft)}s. ¿Listo para el nivel ${cfg.level + 1}?`;
+    if (this.inTutorial) {
+      this.resultTitle.innerText = "¡TUTORIAL COMPLETADO!";
+      this.resultText.innerText =
+        "Ya sabes jugar. Ahora sí: ¡a por el Nivel 1!";
+    } else {
+      this.resultTitle.innerText = isLast
+        ? "¡MAESTRO POKÉMON!"
+        : "¡NIVEL SUPERADO!";
+      this.resultText.innerText = isLast
+        ? "Has completado todos los niveles. ¡Increíble memoria!"
+        : `Te sobraron ${Math.max(0, this.timeLeft)}s. ¿Listo para el nivel ${this.currentLevel + 1}?`;
+    }
 
     this.nextLevelBtn.classList.toggle("hidden", isLast);
     this.resultModal.classList.remove("opacity-0", "pointer-events-none");

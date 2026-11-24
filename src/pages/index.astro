@@ -69,7 +69,7 @@ import '../styles/global.css';
         </h1>
 
         <!-- Game Board Container -->
-        <div id="pokes" class="poke__container flex flex-wrap items-center justify-center max-w-[900px] w-full gap-4 perspective-1000 z-10">
+        <div id="pokes" class="poke__container perspective-1000 z-10">
             <!-- Cards injected via JS -->
         </div>
 
@@ -80,19 +80,11 @@ import '../styles/global.css';
             <section class="neu-panel p-8 md:p-10 flex flex-col items-center gap-8 max-w-md w-full mx-4 transition-transform duration-300">
                 <h5 class="text-lg uppercase opacity-60 tracking-widest text-center">Select Level</h5>
 
-                <div class="grid grid-cols-3 gap-5 w-full justify-items-center">
-                    <div class="flex flex-col items-center gap-1">
-                        <button id="level_1" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="1">1</button>
-                        <span class="text-[0.55rem] uppercase tracking-widest opacity-50">Tutorial</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <button id="level_2" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="2">2</button>
-                        <span class="text-[0.55rem] uppercase tracking-widest opacity-50">Tutorial</span>
-                    </div>
+                <div class="grid grid-cols-2 gap-5 justify-items-center">
+                    <button id="level_1" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="1">1</button>
+                    <button id="level_2" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="2">2</button>
                     <button id="level_3" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="3">3</button>
                     <button id="level_4" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="4">4</button>
-                    <button id="level_5" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="5">5</button>
-                    <button id="level_6" class="neu-icon-btn w-16 h-16 text-2xl font-bold text-neu active:scale-95 level-btn" data-level="6">6</button>
                 </div>
 
                 <and-button id="start-btn" variant="default" class="neu-btn-primary w-full text-xl font-bold tracking-wider">
@@ -121,14 +113,20 @@ import '../styles/global.css';
                     </li>
                 </ol>
 
-                <p class="text-xs opacity-50 text-center">
-                    Los niveles 1 y 2 son de práctica: perfectos para calentar.<br/>
-                    Puedes reabrir esta ayuda cuando quieras desde el botón ?
+                <p class="text-sm opacity-60 text-center">
+                    ¿Quieres practicar primero con una ronda de tutorial de 4 cartas?
                 </p>
 
-                <and-button id="tutorial-ok-btn" variant="default" class="neu-btn-primary w-full text-lg font-bold tracking-wider">
-                    ¡ENTENDIDO!
+                <and-button id="tutorial-play-btn" variant="default" class="neu-btn-primary w-full text-lg font-bold tracking-wider">
+                    JUGAR TUTORIAL
                 </and-button>
+                <and-button id="tutorial-skip-btn" variant="default" class="neu-btn w-full text-lg font-bold tracking-wider">
+                    AHORA NO
+                </and-button>
+
+                <p class="text-xs opacity-50 text-center">
+                    Puedes reabrir esta ayuda cuando quieras desde el botón ?
+                </p>
             </div>
         </div>
 

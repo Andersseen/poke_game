@@ -1,103 +1,47 @@
 /**
- * MusicEngine — procedural chiptune background music via Web Audio API.
+ * MusicEngine — background music for menu and gameplay.
  *
- * Two looping tracks: a calm "menu" theme and an upbeat "game" theme.
- * No audio assets needed; everything is synthesized on the fly.
+ * - "game": the game's original soundtrack (public/assets/sounds/level.wav),
+ *   looped. It was made to sit next to the existing .wav sound effects,
+ *   so it matches their style exactly.
+ * - "menu": a soft ambient synth pad (slow sine chords via Web Audio),
+ *   kept deliberately neutral so it blends with the effects.
  */
 
 type TrackName = "menu" | "game";
 
-interface Note {
-  /** Frequency in Hz. 0 = rest. */
-  f: number;
-  /** Duration in steps. */
-  d: number;
-}
-
-const N = (f: number, d: number = 1): Note => ({ f, d });
-
-/* Note frequencies (Hz) */
+/* Chord frequencies (Hz) for the menu pad: C – Am – F – G */
 const C3 = 130.81,
-  E3 = 164.81,
+  F3 = 174.61,
   G3 = 196.0,
   A3 = 220.0,
+  B3 = 246.94,
   C4 = 261.63,
   D4 = 293.66,
   E4 = 329.63,
-  F4 = 349.23,
-  G4 = 392.0,
-  A4 = 440.0,
-  B4 = 493.88,
-  C5 = 523.25,
-  D5 = 587.33,
-  E5 = 659.25,
-  G5 = 783.99;
+  G4 = 392.0;
 
-/** Calm, dreamy menu theme — slow pentatonic arpeggio. */
-const MENU_LEAD: Note[] = [
-  N(C4, 2), N(E4, 2), N(G4, 2), N(E4, 2),
-  N(A4, 2), N(G4, 2), N(E4, 2), N(D4, 2),
-  N(C4, 2), N(E4, 2), N(G4, 2), N(A4, 2),
-  N(G4, 4), N(E4, 2), N(C4, 2),
-];
-const MENU_BASS: Note[] = [
-  N(C3, 4), N(G3, 4), N(A3, 4), N(G3, 4),
-  N(C3, 4), N(G3, 4), N(A3, 4), N(E3, 4),
+const MENU_CHORDS: number[][] = [
+  [C3, E4, G4], // C
+  [A3, C4, E4], // Am
+  [F3, A3, C4], // F
+  [G3, B3, D4], // G
 ];
 
-/** Upbeat game theme — driving bass + catchy lead. */
-const GAME_LEAD: Note[] = [
-  N(C5), N(C5), N(G4), N(A4), N(C5), N(0), N(E5), N(D5),
-  N(C5), N(C5), N(G4), N(A4), N(G4), N(0), N(E4), N(D4),
-  N(C5), N(C5), N(G4), N(A4), N(C5), N(E5), N(D5), N(C5),
-  N(D5), N(D5), N(A4), N(B4), N(G4), N(0), N(G4), N(0),
-];
-const GAME_BASS: Note[] = [
-  N(C3), N(C3), N(G3), N(G3), N(A3), N(A3), N(G3), N(G3),
-  N(C3), N(C3), N(G3), N(G3), N(A3), N(A3), N(E3), N(E3),
-  N(F4 / 2), N(F4 / 2), N(C3), N(C3), N(D4 / 2), N(D4 / 2), N(G3), N(G3),
-  N(F4 / 2), N(F4 / 2), N(C3), N(C3), N(G3), N(G3), N(G3), N(G3),
-];
-
-interface Track {
-  bpm: number;
-  lead: Note[];
-  bass: Note[];
-  leadWave: OscillatorType;
-  bassWave: OscillatorType;
-  leadGain: number;
-  bassGain: number;
-}
-
-const TRACKS: Record<TrackName, Track> = {
-  menu: {
-    bpm: 92,
-    lead: MENU_LEAD,
-    bass: MENU_BASS,
-    leadWave: "triangle",
-    bassWave: "sine",
-    leadGain: 0.16,
-    bassGain: 0.1,
-  },
-  game: {
-    bpm: 152,
-    lead: GAME_LEAD,
-    bass: GAME_BASS,
-    leadWave: "square",
-    bassWave: "sawtooth",
-    leadGain: 0.07,
-    bassGain: 0.05,
-  },
-};
+/** Seconds each menu chord rings for (they overlap slightly). */
+const CHORD_DURATION = 3.6;
+const MENU_GAIN = 0.045;
+const GAME_VOLUME = 0.35;
 
 export class MusicEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private current: TrackName | null = null;
-  private stepTimer: number | null = null;
+  private chordTimer: number | null = null;
+  private nextChordTime: number = 0;
+  private chordIndex: number = 0;
   private muted: boolean = false;
-  private nextStepTime: number = 0;
-  private stepIndex: number = 0;
+  private gameAudio: HTMLAudioElement | null = null;
 
   constructor() {
     this.muted = localStorage.getItem("poke_music_muted") === "1";
@@ -124,23 +68,48 @@ export class MusicEngine {
     }
   }
 
+  private ensureGameAudio(): HTMLAudioElement | null {
+    if (!this.gameAudio) {
+      this.gameAudio = document.getElementById(
+        "sound__level",
+      ) as HTMLAudioElement | null;
+      if (this.gameAudio) {
+        this.gameAudio.loop = true;
+        this.gameAudio.volume = GAME_VOLUME;
+        this.gameAudio.muted = this.muted;
+      }
+    }
+    return this.gameAudio;
+  }
+
   play(track: TrackName) {
     this.ensureContext();
-    if (this.current === track) return;
+    if (this.current === track) {
+      // Already on this track: make sure the game loop is actually running.
+      if (track === "game") this.startGameAudio(false);
+      return;
+    }
     this.stop();
-
     this.current = track;
-    this.stepIndex = 0;
-    this.nextStepTime = this.ctx!.currentTime + 0.1;
 
-    const stepDuration = 60 / TRACKS[track].bpm / 2; // eighth-note steps
-    this.stepTimer = window.setInterval(() => this.scheduler(stepDuration), 40);
+    if (track === "menu") {
+      this.chordIndex = 0;
+      this.nextChordTime = this.ctx!.currentTime + 0.1;
+      this.chordTimer = window.setInterval(() => this.scheduler(), 200);
+    } else {
+      this.startGameAudio(true);
+    }
   }
 
   stop() {
-    if (this.stepTimer !== null) {
-      clearInterval(this.stepTimer);
-      this.stepTimer = null;
+    if (this.chordTimer !== null) {
+      clearInterval(this.chordTimer);
+      this.chordTimer = null;
+    }
+    const audio = this.gameAudio;
+    if (audio && !audio.paused) {
+      audio.pause();
+      audio.currentTime = 0;
     }
     this.current = null;
   }
@@ -155,70 +124,59 @@ export class MusicEngine {
         0.05,
       );
     }
+    if (this.gameAudio) {
+      this.gameAudio.muted = this.muted;
+    }
     return this.muted;
   }
 
-  /** Simple lookahead scheduler: schedule all steps due within 150 ms. */
-  private scheduler(stepDuration: number) {
-    if (!this.ctx || !this.master || !this.current) return;
-    const track = TRACKS[this.current];
-
-    while (this.nextStepTime < this.ctx.currentTime + 0.15) {
-      this.scheduleStep(track, this.stepIndex, this.nextStepTime, stepDuration);
-      this.nextStepTime += stepDuration;
-      this.stepIndex++;
+  private startGameAudio(restart: boolean) {
+    const audio = this.ensureGameAudio();
+    if (!audio) return;
+    audio.muted = this.muted;
+    if (restart) audio.currentTime = 0;
+    if (audio.paused) {
+      audio.play().catch((e) => console.log("Music play failed", e));
     }
   }
 
-  private scheduleStep(
-    track: Track,
-    step: number,
-    time: number,
-    stepDuration: number,
-  ) {
-    const leadNote = this.noteAt(track.lead, step);
-    const bassNote = this.noteAt(track.bass, step);
+  /** Lookahead scheduler: keep one chord queued ahead of the clock. */
+  private scheduler() {
+    if (!this.ctx || !this.master || this.current !== "menu") return;
 
-    if (leadNote && leadNote.f > 0) {
-      this.tone(leadNote.f, time, stepDuration * 0.9, track.leadWave, track.leadGain);
-    }
-    if (bassNote && bassNote.f > 0) {
-      this.tone(bassNote.f, time, stepDuration * 0.95, track.bassWave, track.bassGain);
+    while (this.nextChordTime < this.ctx.currentTime + 0.5) {
+      this.scheduleChord(
+        MENU_CHORDS[this.chordIndex % MENU_CHORDS.length],
+        this.nextChordTime,
+      );
+      this.nextChordTime += CHORD_DURATION;
+      this.chordIndex++;
     }
   }
 
-  /** Maps a global step index onto a note list whose entries have durations. */
-  private noteAt(notes: Note[], step: number): Note | null {
-    const total = notes.reduce((sum, n) => sum + n.d, 0);
-    let pos = step % total;
-    for (const note of notes) {
-      if (pos < note.d) return note;
-      pos -= note.d;
+  private scheduleChord(freqs: number[], time: number) {
+    for (const f of freqs) {
+      this.pad(f, time);
     }
-    return null;
   }
 
-  private tone(
-    freq: number,
-    time: number,
-    duration: number,
-    wave: OscillatorType,
-    volume: number,
-  ) {
+  /** A slow-attack, slow-release sine pad note. */
+  private pad(freq: number, time: number) {
     if (!this.ctx || !this.master) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = wave;
+    osc.type = "sine";
     osc.frequency.value = freq;
 
     gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(volume, time + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+    gain.gain.linearRampToValueAtTime(MENU_GAIN, time + 0.7);
+    gain.gain.setValueAtTime(MENU_GAIN, time + CHORD_DURATION - 0.8);
+    gain.gain.linearRampToValueAtTime(0, time + CHORD_DURATION + 0.3);
 
     osc.connect(gain);
     gain.connect(this.master);
     osc.start(time);
-    osc.stop(time + duration + 0.05);
+    osc.stop(time + CHORD_DURATION + 0.4);
   }
 }

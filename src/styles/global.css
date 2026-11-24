@@ -159,55 +159,67 @@
     transform: translateY(0) scale(0.98);
   }
 
-  /* Card size scales with the number of pairs on the board */
+  /* Square board: fixed grid columns per level, no ragged rows */
+  .poke__container {
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 900px;
+    margin-inline: auto;
+  }
+
   .pokemon-card {
-    --card-size: 150px;
-    width: var(--card-size);
-    height: var(--card-size);
+    width: var(--card-size, 150px);
+    height: var(--card-size, 150px);
   }
 
-  .pairs-2 .pokemon-card {
-    --card-size: 140px;
+  .pairs-2 {
+    --card-size: 120px;
+    grid-template-columns: repeat(2, var(--card-size));
   }
 
-  .pairs-4 .pokemon-card {
-    --card-size: 115px;
+  .pairs-6 {
+    --card-size: 76px;
+    grid-template-columns: repeat(4, var(--card-size));
   }
 
-  .pairs-6 .pokemon-card {
-    --card-size: 95px;
+  .pairs-8 {
+    --card-size: 76px;
+    grid-template-columns: repeat(4, var(--card-size));
   }
 
-  .pairs-8 .pokemon-card {
-    --card-size: 80px;
+  .pairs-10 {
+    --card-size: 58px;
+    grid-template-columns: repeat(5, var(--card-size));
   }
 
-  .pairs-10 .pokemon-card {
-    --card-size: 70px;
-  }
-
-  .pairs-12 .pokemon-card {
-    --card-size: 62px;
+  .pairs-12 {
+    --card-size: 74px;
+    grid-template-columns: repeat(4, var(--card-size));
   }
 
   @media (min-width: 768px) {
-    .pairs-2 .pokemon-card {
-      --card-size: 170px;
+    .poke__container {
+      gap: 1rem;
     }
-    .pairs-4 .pokemon-card {
-      --card-size: 140px;
+    .pairs-2 {
+      --card-size: 150px;
     }
-    .pairs-6 .pokemon-card {
+    .pairs-6 {
       --card-size: 120px;
     }
-    .pairs-8 .pokemon-card {
-      --card-size: 100px;
+    .pairs-8 {
+      --card-size: 115px;
     }
-    .pairs-10 .pokemon-card {
-      --card-size: 88px;
+    .pairs-10 {
+      --card-size: 95px;
     }
-    .pairs-12 .pokemon-card {
-      --card-size: 78px;
+    .pairs-12 {
+      --card-size: 80px;
+      grid-template-columns: repeat(6, var(--card-size));
     }
   }
 
