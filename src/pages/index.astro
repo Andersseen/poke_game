@@ -56,6 +56,11 @@ import '../styles/global.css';
             </div>
             <div class="w-px h-8 bg-current opacity-20"></div>
             <div class="flex flex-col items-center min-w-[3rem] md:min-w-[4rem]">
+                <span class="text-[0.6rem] md:text-xs font-light opacity-60 uppercase tracking-widest">Intentos</span>
+                <span id="attempts" class="text-xs md:text-sm font-bold font-mono">--</span>
+            </div>
+            <div class="w-px h-8 bg-current opacity-20"></div>
+            <div class="flex flex-col items-center min-w-[3rem] md:min-w-[4rem]">
                 <span class="text-[0.6rem] md:text-xs font-light opacity-60 uppercase tracking-widest">Time</span>
                 <span id="time" class="text-xs md:text-sm font-bold font-mono">--:--</span>
             </div>
@@ -105,11 +110,11 @@ import '../styles/global.css';
                     </li>
                     <li class="flex items-start gap-3">
                         <span class="neu-icon-btn w-8 h-8 shrink-0 font-bold text-[var(--primary)]">2</span>
-                        <span>Encuentra su pareja. Si fallas, ambas se ocultan de nuevo.</span>
+                        <span>Encuentra su pareja. Si fallas, ambas se ocultan de nuevo y pierdes un intento.</span>
                     </li>
                     <li class="flex items-start gap-3">
                         <span class="neu-icon-btn w-8 h-8 shrink-0 font-bold text-[var(--primary)]">3</span>
-                        <span>¡Emparéjalas todas antes de que se agote el tiempo!</span>
+                        <span>¡Emparéjalas todas antes de que se agote el tiempo o te quedes sin intentos!</span>
                     </li>
                 </ol>
 
@@ -147,8 +152,8 @@ import '../styles/global.css';
         <!-- Game Over Popup -->
          <div id="gameover-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
             <div class="neu-panel p-10 flex flex-col items-center gap-6 max-w-sm w-full mx-4">
-                 <h2 class="text-3xl font-bold text-[var(--error)] text-neu">¡SE ACABÓ EL TIEMPO!</h2>
-                 <p class="opacity-70 text-center">La memoria también se entrena. ¡Inténtalo de nuevo!</p>
+                 <h2 id="gameover-title" class="text-3xl font-bold text-[var(--error)] text-neu">¡SE ACABÓ EL TIEMPO!</h2>
+                 <p id="gameover-text" class="opacity-70 text-center">La memoria también se entrena. ¡Inténtalo de nuevo!</p>
                  <and-button id="retry-btn" variant="default" class="neu-btn-primary w-full text-lg font-bold tracking-wider">
                     REINTENTAR
                 </and-button>

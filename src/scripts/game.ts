@@ -11,19 +11,27 @@ interface LevelConfig {
   pairs: number;
   /** Seconds available to clear the level. */
   time: number;
+  /** Failed matches allowed before the level is lost. */
+  attempts: number;
 }
 
 const LEVELS: LevelConfig[] = [
-  { level: 1, pairs: 6, time: 75 },
-  { level: 2, pairs: 8, time: 100 },
-  { level: 3, pairs: 10, time: 120 },
-  { level: 4, pairs: 12, time: 150 },
+  { level: 1, pairs: 6, time: 75, attempts: 9 },
+  { level: 2, pairs: 8, time: 100, attempts: 12 },
+  { level: 3, pairs: 10, time: 120, attempts: 15 },
+  { level: 4, pairs: 12, time: 150, attempts: 18 },
 ];
 
 /** Practice round (2×2, 4 cards) offered before the real levels. */
-const TUTORIAL: LevelConfig = { level: 0, pairs: 2, time: 90 };
+const TUTORIAL: LevelConfig = { level: 0, pairs: 2, time: 90, attempts: 5 };
 
 const TUTORIAL_SEEN_KEY = "poke_tutorial_seen";
+
+/**
+ * Fallback Pokédex upper bound (Gen IX). The real count is fetched from
+ * PokeAPI at startup so new generations are picked up automatically.
+ */
+const FALLBACK_MAX_POKEMON_ID = 1025;
 
 class Game {
   private pokeContainer: HTMLElement;
@@ -53,13 +61,18 @@ class Game {
 
   private levelBtns: NodeListOf<HTMLElement>;
 
-  private pokemonsArray: Pokemon[] = [];
+  /** Session cache so repeated Pokémon are not refetched from PokeAPI. */
+  private pokemonCache = new Map<number, Pokemon>();
+  private maxPokemonId: number = FALLBACK_MAX_POKEMON_ID;
   private openCards: HTMLElement[] = [];
   private isProcessing: boolean = false;
   private currentLevel: number = 1;
   private totalPairs: number = 0;
   private matchedPairs: number = 0;
   private gameTitle: HTMLElement;
+
+  private attemptsDisplay: HTMLElement;
+  private attemptsLeft: number = 0;
 
   private timeLeft: number = 0;
   private timerId: number | null = null;
@@ -109,6 +122,7 @@ class Game {
 
     this.levelBtns = document.querySelectorAll(".level-btn");
     this.gameTitle = document.querySelector("#game-title") as HTMLElement;
+    this.attemptsDisplay = document.querySelector("#attempts") as HTMLElement;
 
     this.init();
   }
@@ -118,10 +132,11 @@ class Game {
     return LEVELS.find((l) => l.level === this.currentLevel) ?? LEVELS[0];
   }
 
-  private async init() {
+  private init() {
     this.updateMuteIcon();
     this.addEventListeners();
     this.maybeShowTutorial();
+    this.renderAttempts();
 
     // Browsers require a user gesture before audio can start.
     const unlock = () => {
@@ -130,7 +145,8 @@ class Game {
     };
     document.addEventListener("pointerdown", unlock);
 
-    await this.fetchPokemons();
+    // Fire and forget: keeps the random pool in sync with new generations.
+    void this.fetchPokemonCount();
   }
 
   /* ────────────────────────── Tutorial ────────────────────────── */
@@ -166,7 +182,7 @@ class Game {
       this.timeLeft--;
       this.renderTime();
       if (this.timeLeft <= 0) {
-        this.handleGameOver();
+        this.handleGameOver("time");
       }
     }, 1000);
   }
@@ -189,11 +205,43 @@ class Game {
     this.timeDisplay.classList.toggle("time-warning", clamped <= 10);
   }
 
-  private handleGameOver() {
+  /* ───────────────────────── Attempts ─────────────────────────── */
+
+  private startAttempts() {
+    this.attemptsLeft = this.levelConfig.attempts;
+    this.renderAttempts();
+  }
+
+  private renderAttempts() {
+    this.attemptsDisplay.innerText =
+      this.playing || this.attemptsLeft > 0
+        ? this.attemptsLeft.toString()
+        : "--";
+    this.attemptsDisplay.classList.toggle(
+      "stat-warning",
+      this.playing && this.attemptsLeft <= 3,
+    );
+  }
+
+  private handleGameOver(reason: "time" | "attempts") {
     this.stopTimer();
     this.playing = false;
     this.playSound("error");
     this.music.play("menu");
+
+    const title = this.gameoverModal.querySelector("#gameover-title");
+    const text = this.gameoverModal.querySelector("#gameover-text");
+    if (title) {
+      title.textContent =
+        reason === "time" ? "¡SE ACABÓ EL TIEMPO!" : "¡SIN INTENTOS!";
+    }
+    if (text) {
+      text.textContent =
+        reason === "time"
+          ? "La memoria también se entrena. ¡Inténtalo de nuevo!"
+          : "Has gastado todos los intentos de este nivel. ¡Otra vez!";
+    }
+
     setTimeout(() => {
       this.gameoverModal.classList.remove("opacity-0", "pointer-events-none");
     }, 400);
@@ -264,7 +312,7 @@ class Game {
 
   /* ──────────────────────── Game flow ─────────────────────────── */
 
-  private startGame() {
+  private async startGame() {
     this.hideGameOverModal();
     this.menuContainer.classList.add("opacity-0", "pointer-events-none");
     this.gameTitle.classList.add(
@@ -296,7 +344,21 @@ class Game {
     this.music.play("game");
     this.playing = true;
 
-    const deck = this.prepareDeck();
+    this.showLoading(true);
+    let deck: Pokemon[];
+    try {
+      deck = await this.prepareDeck();
+    } catch (e) {
+      // Offline or PokeAPI unreachable: back to the menu to retry.
+      console.error(e);
+      this.showLoading(false);
+      this.stopGame();
+      return;
+    }
+    this.showLoading(false);
+
+    // The player may have gone back to the menu while Pokémon were loading.
+    if (!this.playing) return;
 
     deck.forEach((pokemon, index) => {
       setTimeout(() => {
@@ -309,6 +371,20 @@ class Game {
     this.totalPairs = deck.length / 2;
 
     this.startTimer();
+    this.startAttempts();
+  }
+
+  private showLoading(show: boolean) {
+    const existing = this.pokeContainer.querySelector(".loading-text");
+    if (show) {
+      if (existing) return;
+      const el = document.createElement("p");
+      el.className = "loading-text";
+      el.innerText = "Buscando Pokémon...";
+      this.pokeContainer.appendChild(el);
+    } else {
+      existing?.remove();
+    }
   }
 
   private stopGame() {
@@ -316,6 +392,8 @@ class Game {
     this.inTutorial = false;
     this.levelDisplay.innerText = this.currentLevel.toString();
     this.stopTimer();
+    this.attemptsLeft = 0;
+    this.renderAttempts();
     this.menuContainer.classList.remove("opacity-0", "pointer-events-none");
     this.gameTitle.classList.remove("scale-50", "-translate-y-24", "opacity-0");
 
@@ -346,7 +424,7 @@ class Game {
         : "¡NIVEL SUPERADO!";
       this.resultText.innerText = isLast
         ? "Has completado todos los niveles. ¡Increíble memoria!"
-        : `Te sobraron ${Math.max(0, this.timeLeft)}s. ¿Listo para el nivel ${this.currentLevel + 1}?`;
+        : `Te sobraron ${Math.max(0, this.timeLeft)}s y ${this.attemptsLeft} intentos. ¿Listo para el nivel ${this.currentLevel + 1}?`;
     }
 
     this.nextLevelBtn.classList.toggle("hidden", isLast);
@@ -361,37 +439,91 @@ class Game {
     this.gameoverModal.classList.add("opacity-0", "pointer-events-none");
   }
 
-  /* ─────────────────────── Deck & cards ───────────────────────── */
+  /* ───────────────────── Pokémon pool ─────────────────────────── */
 
-  private async fetchPokemons() {
-    const ids = Array.from({ length: 30 }, (_, i) => i * 3 + 1);
-
-    const promises = ids.map(async (id) => {
-      try {
-        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-        const data = await res.json();
-        return {
-          id: data.id,
-          name: data.name,
-          image:
-            data.sprites.other?.dream_world?.front_default ||
-            data.sprites.front_default,
-        };
-      } catch (e) {
-        console.error(e);
-        return null;
+  /** Total number of Pokémon species available in PokeAPI. */
+  private async fetchPokemonCount() {
+    try {
+      const res = await fetch(
+        "https://pokeapi.co/api/v2/pokemon-species/?limit=0",
+      );
+      const data = await res.json();
+      if (typeof data.count === "number" && data.count > 0) {
+        this.maxPokemonId = data.count;
       }
-    });
-
-    const results = await Promise.all(promises);
-    this.pokemonsArray = results.filter((p) => p !== null) as Pokemon[];
+    } catch (e) {
+      console.error("Could not fetch Pokémon count, using fallback", e);
+    }
   }
 
-  private prepareDeck(): Pokemon[] {
+  private async fetchPokemon(id: number): Promise<Pokemon | null> {
+    const cached = this.pokemonCache.get(id);
+    if (cached) return cached;
+
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, {
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const image =
+        data.sprites.other?.["official-artwork"]?.front_default ||
+        data.sprites.other?.dream_world?.front_default ||
+        data.sprites.front_default;
+      if (!image) return null;
+
+      const pokemon: Pokemon = { id: data.id, name: data.name, image };
+      this.pokemonCache.set(id, pokemon);
+      return pokemon;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch `count` random, unique Pokémon from the whole Pokédex, so every
+   * game deals a different set. A few extras are fetched in parallel to
+   * cover failed requests.
+   */
+  private async fetchRandomPokemons(count: number): Promise<Pokemon[]> {
+    const tried = new Set<number>();
+    const pokemons: Pokemon[] = [];
+
+    const draw = (n: number): number[] => {
+      const ids: number[] = [];
+      while (ids.length < n) {
+        const id = 1 + Math.floor(Math.random() * this.maxPokemonId);
+        if (tried.has(id)) continue;
+        tried.add(id);
+        ids.push(id);
+      }
+      return ids;
+    };
+
+    // Fetch in rounds (with extras) until enough Pokémon respond.
+    let rounds = 0;
+    while (pokemons.length < count && rounds < 5) {
+      rounds++;
+      const batch = await Promise.all(
+        draw(count + 3 - pokemons.length).map((id) => this.fetchPokemon(id)),
+      );
+      pokemons.push(...batch.filter((p): p is Pokemon => p !== null));
+    }
+
+    if (pokemons.length < count) {
+      throw new Error("Could not load enough Pokémon from PokeAPI");
+    }
+
+    return pokemons.slice(0, count);
+  }
+
+  /* ─────────────────────── Deck & cards ───────────────────────── */
+
+  private async prepareDeck(): Promise<Pokemon[]> {
     const count = this.levelConfig.pairs;
 
-    const shuffled = [...this.pokemonsArray].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, count);
+    const selected = await this.fetchRandomPokemons(count);
     const pairs = [...selected, ...selected];
     return pairs.sort(() => 0.5 - Math.random());
   }
@@ -513,6 +645,9 @@ class Game {
   private handleMismatch(card1: HTMLElement, card2: HTMLElement) {
     this.playSound("error");
 
+    this.attemptsLeft--;
+    this.renderAttempts();
+
     card1.classList.add("animate-shake");
     card2.classList.add("animate-shake");
 
@@ -533,6 +668,10 @@ class Game {
 
       this.openCards = [];
       this.isProcessing = false;
+
+      if (this.attemptsLeft <= 0 && this.playing) {
+        this.handleGameOver("attempts");
+      }
     }, 800);
   }
 
