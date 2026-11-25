@@ -11,21 +11,38 @@ interface LevelConfig {
   pairs: number;
   /** Seconds available to clear the level. */
   time: number;
-  /** Failed matches allowed before the level is lost. */
-  attempts: number;
 }
 
 const LEVELS: LevelConfig[] = [
-  { level: 1, pairs: 6, time: 75, attempts: 9 },
-  { level: 2, pairs: 8, time: 100, attempts: 12 },
-  { level: 3, pairs: 10, time: 120, attempts: 15 },
-  { level: 4, pairs: 12, time: 150, attempts: 18 },
+  { level: 1, pairs: 6, time: 75 },
+  { level: 2, pairs: 8, time: 100 },
+  { level: 3, pairs: 10, time: 120 },
+  { level: 4, pairs: 12, time: 150 },
 ];
 
 /** Practice round (2×2, 4 cards) offered before the real levels. */
-const TUTORIAL: LevelConfig = { level: 0, pairs: 2, time: 90, attempts: 5 };
+const TUTORIAL: LevelConfig = { level: 0, pairs: 2, time: 90 };
+
+/** Fixed failed matches allowed in the practice round. */
+const TUTORIAL_ATTEMPTS = 5;
 
 const TUTORIAL_SEEN_KEY = "poke_tutorial_seen";
+
+type Difficulty = "easy" | "normal" | "hard";
+
+const DIFFICULTY_STORAGE_KEY = "poke_difficulty";
+
+const DIFFICULTIES: Difficulty[] = ["easy", "normal", "hard"];
+
+/**
+ * Failed matches allowed per level = ceil(pairs × multiplier).
+ * easy → 15/20/25/30 · normal → 12/16/20/24 · hard → 9/12/15/18
+ */
+const DIFFICULTY_ATTEMPT_MULTIPLIER: Record<Difficulty, number> = {
+  easy: 2.5,
+  normal: 2,
+  hard: 1.5,
+};
 
 /**
  * Fallback Pokédex upper bound (Gen IX). The real count is fetched from
@@ -60,6 +77,8 @@ class Game {
   private soundOffIcon: HTMLElement;
 
   private levelBtns: NodeListOf<HTMLElement>;
+  private difficultyBtns: NodeListOf<HTMLElement>;
+  private difficulty: Difficulty = "normal";
 
   /** Session cache so repeated Pokémon are not refetched from PokeAPI. */
   private pokemonCache = new Map<number, Pokemon>();
@@ -121,6 +140,7 @@ class Game {
     this.soundOffIcon = document.querySelector("#sound-off-icon") as HTMLElement;
 
     this.levelBtns = document.querySelectorAll(".level-btn");
+    this.difficultyBtns = document.querySelectorAll(".difficulty-btn");
     this.gameTitle = document.querySelector("#game-title") as HTMLElement;
     this.attemptsDisplay = document.querySelector("#attempts") as HTMLElement;
 
@@ -132,9 +152,18 @@ class Game {
     return LEVELS.find((l) => l.level === this.currentLevel) ?? LEVELS[0];
   }
 
+  /** Failed matches allowed for the current level and difficulty. */
+  private get maxAttempts(): number {
+    if (this.inTutorial) return TUTORIAL_ATTEMPTS;
+    return Math.ceil(
+      this.levelConfig.pairs * DIFFICULTY_ATTEMPT_MULTIPLIER[this.difficulty],
+    );
+  }
+
   private init() {
     this.updateMuteIcon();
     this.addEventListeners();
+    this.loadDifficulty();
     this.maybeShowTutorial();
     this.renderAttempts();
 
@@ -208,7 +237,7 @@ class Game {
   /* ───────────────────────── Attempts ─────────────────────────── */
 
   private startAttempts() {
-    this.attemptsLeft = this.levelConfig.attempts;
+    this.attemptsLeft = this.maxAttempts;
     this.renderAttempts();
   }
 
@@ -288,6 +317,38 @@ class Game {
         const level = parseInt(btn.getAttribute("data-level") || "1");
         this.selectLevel(level);
       });
+    });
+
+    this.difficultyBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const difficulty = btn.getAttribute("data-difficulty") as Difficulty;
+        if (DIFFICULTIES.includes(difficulty)) {
+          this.setDifficulty(difficulty);
+        }
+      });
+    });
+  }
+
+  /* ─────────────────────── Difficulty ─────────────────────────── */
+
+  private loadDifficulty() {
+    const saved = localStorage.getItem(DIFFICULTY_STORAGE_KEY) as Difficulty;
+    if (DIFFICULTIES.includes(saved)) {
+      this.difficulty = saved;
+    }
+    this.updateDifficultyUI();
+  }
+
+  private setDifficulty(difficulty: Difficulty) {
+    this.difficulty = difficulty;
+    localStorage.setItem(DIFFICULTY_STORAGE_KEY, difficulty);
+    this.updateDifficultyUI();
+  }
+
+  private updateDifficultyUI() {
+    this.difficultyBtns.forEach((b) => {
+      const isActive = b.getAttribute("data-difficulty") === this.difficulty;
+      b.classList.toggle("active", isActive);
     });
   }
 

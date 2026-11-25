@@ -120,6 +120,40 @@
       -9px -9px 18px var(--shadow-light);
   }
 
+  /* Difficulty selector pills (menu) */
+  .difficulty-btn {
+    width: 100%;
+    padding: 0.6rem 0.5rem;
+    border: none;
+    border-radius: 12px;
+    background: var(--background);
+    box-shadow:
+      4px 4px 8px var(--shadow-dark),
+      -4px -4px 8px var(--shadow-light);
+    color: var(--foreground);
+    font-family: inherit;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .difficulty-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .difficulty-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .difficulty-btn.active {
+    box-shadow:
+      inset 3px 3px 6px var(--shadow-dark),
+      inset -3px -3px 6px var(--shadow-light);
+    color: var(--primary);
+  }
+
   /* Neumorphic skin for <and-button> (via ::part) */
   and-button {
     display: block;
